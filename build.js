@@ -25,11 +25,11 @@ function writeFile(file, content, encode, fn){
 // lib dir
 
 var lib = 'lib/components';
-var dest = 'dest/ui.js';
+var dest = 'dist/ui.js';
 
 // js
 writeFile(dest, '', 'utf-8');
-var js = fs.createWriteStream('dest/ui.js', {
+var js = fs.createWriteStream('dist/ui.js', {
 	flags: 'a'
 });
 
@@ -72,9 +72,9 @@ function build(name, fn) {
 		var html = path.join(lib, name, 'index.html');
 		if (fs.existsSync(html)) {
 			read(html, function(html){
-				js = '\n;(function(af, html){\n'
+				js = '\n;(function(aw, html){\n'
 					+ js
-					+ '\n})(af, ' + JSON.stringify(html) + ');';
+					+ '\n})(aw, ' + JSON.stringify(html) + ');';
 				append(dest, js, function(){
 					console.log('  \033[90mbuild \033[36m%s\033[m', name);
 					fn();
@@ -82,9 +82,9 @@ function build(name, fn) {
 			});
 			// without template
 		} else {
-			js = '\n;(function(af){\n'
+			js = '\n;(function(aw){\n'
 				+ js
-				+ '\n})(af);';
+				+ '\n})(aw);';
 			append(dest, js, function(){
 				console.log('  \033[90mbuild \033[36m%s\033[m', name);
 				fn();
