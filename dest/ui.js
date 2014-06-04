@@ -361,7 +361,7 @@ var defaultConfig = {}
  * Dialog Class
  * @type {*}
  */
-var Dialog = af.Class.create({
+var Dialog = af.ui.Dialog = af.Class.create({
 	// init new Dialog
 	init: function(config){
 		config = af.extend(defaultConfig, config);
@@ -573,3 +573,58 @@ af.ui.overlay = function(config){
 	return new Overlay(config);
 }
 })(af, "<div class=\"ui-overlay hide\"></div>");
+;(function(af, html){
+var Confirm = af.Class.create({
+	cancel: function(text){
+		this.el.find('.cancel').text(text)
+		return this;
+	},
+	ok: function(text){
+		this.el.find('.ok').text(text);
+		return this;
+	},
+	show: function(fn){
+		af.ui.Dialog.prototype.show.call(this);
+
+		this.el.find('.ok').focus();
+		this.callback = fn || af.noop;
+		return this;
+	},
+	render: function(config){
+		af.ui.Dialog.prototype.render.call(this, config);
+
+		var self = this;
+		var action = $(html)
+
+		this.el.addClass('ui-confirm');
+		this.el.append(action);
+
+		this.on('close', function(){
+			self.emit('close');
+			self.callback(false);
+		});
+
+		action.find('.cancel').click(function(e){
+			e.preventDefault();
+			self.emit('cancel');
+			self.callback(false);
+			self.hide();
+		});
+
+		action.find('.ok').click(function(e){
+			e.preventDefault();
+			self.emit('ok');
+			self.callback(true);
+			self.hide();
+		})
+
+	}
+
+}, af.ui.Dialog, af.ui.Emitter);
+
+af.ui.confirm = {
+	init: function(config){
+		return new Confirm(config);
+	}
+}
+})(af, "<div class=\"ui-confirm-box\">\r\n    <button class=\"cancel\">Cancel</button>\r\n    <button class=\"ok\">Ok</button>\r\n</div>");

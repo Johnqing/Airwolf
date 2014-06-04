@@ -35,7 +35,7 @@ var js = fs.createWriteStream('dest/ui.js', {
 
 // components to build
 
-var components = ['emitter', 'dialog', 'overlay'];
+var components = ['emitter', 'dialog', 'overlay', 'confirm'];
 
 function next(i) {
 	var name = components[i];

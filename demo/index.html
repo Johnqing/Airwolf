@@ -6,7 +6,38 @@
 	<link rel="stylesheet" href="../css/overlay.css"/>
 </head>
 <body>
+
+<a class="dialog" href="#">dialog</a>
+<a class="confirm" href="#">confirm</a>
+
 <script src="../lib/171.js"></script>
 <script src="../dest/ui.js"></script>
+<script>
+
+    $('.dialog').click(function(){
+        var dialog = af.ui.dialog.init({
+            title: '标题',
+            message: '内容内容内容内容内容内容内容内容内容内容内容内容内容'
+        });
+
+        dialog.closeable().overlay().show();
+
+        return false;
+    });
+
+    $('.confirm').click(function(){
+        var confirm = af.ui.confirm.init({
+            title: 'Confirm',
+            message: '123'
+        });
+
+        confirm.closeable().show(function(ok){
+            if(ok){
+                alert('confrim');
+            }
+        });
+    });
+
+</script>
 </body>
 </html>
