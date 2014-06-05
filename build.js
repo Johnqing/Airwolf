@@ -25,11 +25,13 @@ function writeFile(file, content, encode, fn){
 // lib dir
 
 var lib = 'lib/components';
-var dest = 'dist/ui.js';
+var distjs = 'dist/ui.js';
+var distcss = 'dist/ui.css';
 
 // js
-writeFile(dest, '', 'utf-8');
-var js = fs.createWriteStream('dist/ui.js', {
+writeFile(distjs, '', 'utf-8');
+writeFile(distcss, '', 'utf-8');
+var js = fs.createWriteStream(distjs, {
 	flags: 'a'
 });
 
@@ -75,7 +77,7 @@ function build(name, fn) {
 				js = '\n;(function(aw, html){\n'
 					+ js
 					+ '\n})(aw, ' + JSON.stringify(html) + ');';
-				append(dest, js, function(){
+				append(distjs, js, function(){
 					console.log('  \033[90mbuild \033[36m%s\033[m', name);
 					fn();
 				});
@@ -85,12 +87,25 @@ function build(name, fn) {
 			js = '\n;(function(aw){\n'
 				+ js
 				+ '\n})(aw);';
-			append(dest, js, function(){
+			append(distjs, js, function(){
 				console.log('  \033[90mbuild \033[36m%s\033[m', name);
 				fn();
 			});
 		}
 	});
+
+	// css
+	var css = path.join(lib, name, 'index.css');
+	if(fs.existsSync(css)){
+		read(css, function(css){
+			css = '/*\n* '+name+'\n======================*/\n'
+				+ css
+				+ '\n';
+			append(distcss, css)
+		})
+	}
+
+
 }
 
 /**
