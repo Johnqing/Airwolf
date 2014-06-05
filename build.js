@@ -37,7 +37,7 @@ var js = fs.createWriteStream(distjs, {
 
 // components to build
 
-var components = ['emitter', 'dialog', 'overlay', 'confirm'];
+var components = ['emitter', 'dialog', 'overlay', 'confirm', 'select'];
 
 function next(i) {
 	var name = components[i];
