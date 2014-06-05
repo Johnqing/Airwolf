@@ -2,15 +2,32 @@
 <html>
 <head>
 	<title></title>
-	<link rel="stylesheet" href="../lib/components/dialog/dialog.css"/>
-	<link rel="stylesheet" href="../lib/components/overlay/overlay.css"/>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		li{
+			list-style: none;
+		}
+	</style>
+	<link rel="stylesheet" href="../dist/ui.css"/>
 </head>
 <body>
 
 <a class="dialog" href="#">dialog</a>
 <a class="confirm" href="#">confirm</a>
 
+<select name="q">
+	<option value="0">0000000</option>
+	<option value="1">111111</option>
+	<option value="2">222222</option>
+	<option value="3">33333333</option>
+	<option value="4">4444</option>
+</select>
+
 <script src="../lib/171.js"></script>
+<script src="../lib/nt.js"></script>
 <script src="../dist/ui.js"></script>
 <script>
 
@@ -37,6 +54,8 @@
             }
         });
     });
+
+	aw.ui.select.init('select');
 
 </script>
 </body>

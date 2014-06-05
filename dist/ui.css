@@ -112,3 +112,70 @@
 	pointer-events: none;
 	opacity: 0;
 }
+/*
+* select
+======================*/
+.ui-select-box {
+	margin-right: 3px;
+	background-position: 100% -25px;
+}
+.ui-select-box select {
+	display: none
+}
+.ui-select-box .select {
+	float: left;
+}
+.ui-select-box .select a {
+	float: left;
+	display: block;
+	overflow: hidden;
+
+	border: 1px solid #ddd;
+
+	padding: 0 22px 0 6px;
+	height: 23px;
+
+	color: #183152;
+	line-height: 21px;
+	text-decoration: none;
+	font-size: 12px;
+
+	background-position: 100% -50px;
+}
+/* options
+=========================*/
+.ui-select-options {
+	display:none;
+
+	position: absolute;
+	z-index: 1001;
+
+	border-color: #000;
+	border-style: solid;
+	border-width: 1px 2px 2px 1px;
+
+	padding: 4px;
+
+	background: #fff;
+}
+.ui-select-options a {
+	padding: 0 5px;
+
+	width: 50px;
+	height: 21px;
+
+	line-height: 21px;
+	text-align: left;
+	color: #000;
+
+	background: none;
+}
+.ui-select-options a:hover {
+	background: #e0e0e0;
+}
+.ui-select-options .selected {
+	background: #e0e0e0;
+}
+.ui-select-options li {
+	text-align: left;
+}

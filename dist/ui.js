@@ -12,6 +12,7 @@
 	var then = $.now();
 
 	var Airwolf = {
+		config: {},
 		/**
 		 * 唯一id
 		 * @returns {number}
@@ -73,6 +74,20 @@
 			} catch (e){
 				return {};
 			}
+		},
+		/**
+		 * a=1&b=2&c=3 => {a:1,b:2,c:3}
+		 * @param query
+		 * @returns {{}}
+		 */
+		query2obj: function(query){
+			var queryArr = query.split('&');
+			var obj = {};
+			for(var i=0; i<queryArr.length; i++){
+				var q = queryArr[i].split('=');
+				obj[q[0]] = q[1];
+			}
+			return obj
 		}
 	}
 
@@ -186,13 +201,13 @@
 		}
 
 		return {
-			/**
-			 *创建新类，可继承
-			 *@param {object} property -类方法，包括init构造函数
-			 *@param {function} parent -父类，继承对象
-			 *@example
-			 *  //parentClass-<1>
-			 *var Persion = Class.create({
+		/**
+		*创建新类，可继承
+		*@param {object} property -类方法，包括init构造函数
+		*@param {function} parent -父类，继承对象
+		*@example
+		*  //parentClass-<1>
+		*var Persion = Class.create({
 		*	init:function(name){
 		*		this.name = name;
 		*	},
@@ -353,6 +368,73 @@ var Emitter = aw.Class.create({
 
 aw.ui.Emitter = Emitter;
 
+})(aw);
+;(function(aw){
+aw.ajax = {
+	json: function(config){
+		config = config || {};
+		// 同步异步
+		if(aw.type(config.async) == 'undefined')
+			config.async = true;
+
+		// 未定义url 直接报错
+		if(!config.url)
+			throw new Error('请求地址未定义!');
+
+		// qid添加
+		if(typeof config.data == 'string'){
+			config.data = aw.query2obj(config.data);
+			config.data.qid = aw.config.qid;
+		}
+
+		$.ajax({
+			type: config.type || 'get',
+			url: config.url,
+			data: config.data,
+			async: config.async,
+			dataType: "json",
+			error: function(data){
+				aw.ajax.netBad(data, config);
+			},
+			/**
+			 * data必须包含：
+			 *
+			 * errno: 0000 => success other => error
+			 *
+			 * @param data
+			 */
+			success: function(data){
+				data.result_code && (data.errno = data.result_code);
+				data.result_msg && (data.error = data.result_msg);
+				if(data.errno === '0000'){
+					config.success && config.success(data);
+					return;
+				}
+				aw.ajax.error(data, config);
+			}
+		});
+	},
+	error: function(data, config){
+		if(!config.isNotCheckLogin){
+			// 1007: 超时
+			// 1008: 未登录
+			if(data.errno == '1007' || data.errno == '1008')
+				return QHPass.logout(QHPAY.Login.go);
+		}
+		// 2005 => lock
+		if(data.errno == '2005'){
+			aw.ui.confirm.lock();
+			return
+		}
+
+		config.error && config.error(data);
+
+		if(config.isNotPop) return;
+
+		aw.ui.confirm.error(data.error);
+
+	}
+}
 })(aw);
 ;(function(aw, html){
 var defaultConfig = {}
@@ -631,3 +713,195 @@ aw.ui.confirm = {
 	}
 }
 })(aw, "<div class=\"ui-confirm-box\">\r\n    <button class=\"cancel\">Cancel</button>\r\n    <button class=\"ok\">Ok</button>\r\n</div>");
+;(function(aw, html){
+var allBox = [];
+
+function killAllBox(id){
+	$.each(allBox, function(i){
+		var item = allBox[i];
+		if(item != id){
+			if(!$('[data-select-box='+item+']').length){
+				$('[data-select-pop='+item+']').remove();
+			}else{
+				$('[data-select-pop='+item+']').css({
+					height: '',
+					width: ''
+				}).hide();
+			}
+			$(document).unbind("click", killAllBox);
+		}
+	});
+}
+
+// 内容变化
+function _onchange(event){
+	var node = $('[data-select-box='+event.data.ref+']');
+	if(!node.length) return false;
+	// ajax
+
+}
+
+/**
+ * 模板替换
+ * @param  {String} tpl  模板
+ * @param  {Object} data 数据
+ * @return {String}      拼接后的模板
+ */
+function _tpl(tpl, data) {
+	return tpl.replace(/{{(.*?)}}/g, function ($1, $2) {
+		return data[$2] || '';
+	});
+}
+
+/**
+ * Select Class
+ * @type {*}
+ */
+var Select = aw.Class.create({
+	init: function(el, config){
+		this.el = el;
+		this.config = config;
+		this.render();
+	},
+	clear: function(){
+		var _box = [];
+		this.emit('clear');
+
+		$.each(allBox, function(i){
+			var item = allBox[i];
+			if($('[data-select-box='+item+']').length){
+				_box.push(item);
+				return
+			}
+			$('[data-select-pop='+item+']').remove();
+		});
+
+	},
+	render: function(){
+		this.clear();
+		var self = this;
+
+		return this.el.each(function(){
+			var $this = $(this);
+			var name = $this.attr('name');
+			var val = $this.val();
+			var label = $('option[value='+val+']', $this).text();
+			var ref = $this.attr('data-select-ref');
+			var refUrl = $this.attr('data-select-ref-url') || '';
+
+			var cid = $this.attr('id') || aw.uniqueId();
+
+			var template = $(html);
+
+			var select = template.eq(0);
+
+			var divNode = select.find('div');
+			divNode.attr('data-select-box', cid);
+			if(ref){
+				divNode.attr('data-select-ref', ref);
+			}
+			var aNode = select.find('a');
+			aNode.attr({
+				'class': $this.attr('class'),
+				'name': name,
+				'value': val
+			});
+			aNode.text(label);
+
+			//options
+			var options = template.eq(2);
+			options.attr('data-select-pop', cid);
+			var ops = ''
+			$("option", $this).each(function(){
+				var option = $(this);
+				var opts = aw.extend({
+					selected: val == option[0].value ? "selected": "",
+					value: option[0].value,
+					message: option[0].text
+				}, option.data());
+				ops += _tpl(self.config.html, opts);
+			});
+			options.html(ops);
+			options.appendTo('body');
+			$this.before(select);
+			self.bindEvent($("div.select", $this.prev())).append($this);
+
+			if(ref && refUrl){
+				$this.unbind("change", _onchange).bind("change", {ref:ref, refUrl:refUrl, $this:$this}, _onchange);
+			}
+
+		});
+	},
+	bindEvent: function(els, config){
+		var option = aw.extend({selector: '>a'}, config);
+		var self = this;
+
+		return els.each(function(){
+			var $this = $(this);
+			var selector = $(option.selector, $this);
+			var id = $this.attr('data-select-box');
+
+			allBox.push(id);
+
+			selector.click(function(){
+				var options = $('[data-select-pop='+id+']');
+				if(options.is(':hidden')){
+					if(options.height() > 300){
+						options.css({
+							height: 300,
+							overflowX: 'scroll'
+						})
+					}
+
+					var top = $this.offset().top + $this.innerHeight();
+
+					if(top + options.height() > $(window).height - 20){
+						top = $(window).height() - 20 - options.height();
+					}
+
+					options.css({
+						top: top,
+						left: $this.offset().left
+					}).show();
+
+					killAllBox(id);
+					$(document).click(killAllBox);
+				}else{
+					$(document).unbind("click", killAllBox);
+					killAllBox();
+				}
+				return false;
+			});
+			self._option($('[data-select-pop='+id+']').find(">li"), selector, $this);
+		});
+	},
+	_option: function(els, selector, box){
+		return els.each(function(){
+			$(">a", this).click(function(){
+				var $this = $(this);
+				$this.parent().parent().find(".selected").removeClass("selected");
+				$this.addClass("selected");
+				selector.text($this.text());
+
+				var $input = $("select", box);
+				if ($input.val() != $this.attr("value")) {
+					$("select", box).val($this.attr("value")).trigger("change");
+				}
+			});
+		});
+	}
+}, aw.ui.Emitter);
+
+aw.ui.select = {
+	init: function(els, config){
+		els = $(els);
+		if(!els.length) return;
+
+		config = aw.extend({
+			html: '<li><a class="{{selected}}" href="#" value="{{value}}">{{message}}</a></li>'
+		},config)
+
+		return new Select(els, config);
+	}
+}
+})(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:\"></a>\r\n\t</div>\r\n</div>\r\n<ul class=\"ui-select-options\"></ul>");
