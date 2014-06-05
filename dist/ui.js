@@ -92,6 +92,7 @@
 	}
 
 	window.aw = window.Airwolf = Airwolf;
+	window.pageConfig = window.pageConfig || {};
 
 })(jQuery, window, document);
 
@@ -300,9 +301,8 @@ var Emitter = aw.Class.create({
 	 */
 	on: function(event, fn){
 		var cb = this.callbacks[event];
-		cb = cb || [];
-
-		cb.push(fn);
+		this.callbacks[event] = cb || [];
+		this.callbacks[event].push(fn);
 
 		return this;
 	},
@@ -419,11 +419,11 @@ aw.ajax = {
 			// 1007: 超时
 			// 1008: 未登录
 			if(data.errno == '1007' || data.errno == '1008')
-				return QHPass.logout(aw.login.init);
+				return aw.login.exitLogin();
 		}
 		// 2005 => lock
 		if(data.errno == '2005'){
-			aw.ui.confirm.lock();
+			aw.ui.dialog.lock();
 			return
 		}
 
@@ -431,13 +431,18 @@ aw.ajax = {
 
 		if(config.isNotPop) return;
 
-		aw.ui.confirm.error(data.error);
+		aw.ui.dialog.error(data.error);
 
+	},
+	netBad: function(data, config){
+		config.netBad && config.netBad(data)
 	}
 }
 })(aw);
 ;(function(aw, html){
-var defaultConfig = {}
+var defaultConfig = {
+	close: aw.noop
+}
 
 /**
  * Dialog Class
@@ -447,7 +452,7 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 	// init new Dialog
 	init: function(config){
 		config = aw.extend(defaultConfig, config);
-
+		this.on('close', config.close);
 		this.template = html;
 		this.el_p = $(this.template);
 		this.el = this.el_p.find('.content');
@@ -609,7 +614,45 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 aw.ui.dialog = {
 	init: function(config){
 		return new Dialog(config);
+	},
+	error: function(error, config){
+		var title = config.title || '操作失败';
+		var errStr = '<div class="validator-error '+(config.cls || '')+'">' +
+			'<h3 class="tips-tips">' +
+			'<s class="icons-terr"></s>'+title+'</h3>' +
+			'<p>'+error+'</p>' +
+			'</div>'
+		var dialog = aw.ui.dialog.init({
+			title: '温馨提示',
+			message: {
+				el: $(errStr)
+			}
+		});
+		dialog.closeable().overlay().show();
+	},
+	lock: function(){
+		if(pageConfig.source != 1) {
+			location.href = '/error/depositExp?type=lock';
+			return
+		}
+		if(pageConfig.pageType == 'error') return
+
+		var error = '您的账户存在安全风险，暂时无法进行相关操作。<br>如有疑问请联系客服：<a href="mailto:payhelp@360.cn">payhelp@360.cn。</a>';
+
+		var dialog = aw.ui.dialog.error(error, {
+			title: '账户存在安全风险',
+			cls: 'lock',
+			close: function(){
+				if(pageConfig.source != 1){
+					aw.login.exitLogin();
+					return;
+				}
+				aw.login.exitBack('/index');
+			}
+		});
+		dialog.closeable().overlay().show();
 	}
+
 }
 })(aw, "<div class=\"ui-dialog-box\">\r\n\t<div class=\"content\">\r\n\t\t<h1>Title</h1>\r\n\t\t<a href=\"#\" class=\"close\">×</a>\r\n\t\t<p>Message</p>\r\n\t</div>\r\n</div>");
 ;(function(aw, html){

@@ -27,14 +27,16 @@
 </select>
 
 <script src="../lib/171.js"></script>
-<script src="../lib/nt.js"></script>
 <script src="../dist/ui.js"></script>
 <script>
 
     $('.dialog').click(function(){
         var dialog = aw.ui.dialog.init({
             title: '标题',
-            message: '内容内容内容内容内容内容内容内容内容内容内容内容内容'
+            message: '内容内容内容内容内容内容内容内容内容内容内容内容内容',
+	        close: function(){
+		        console.log('123132');
+	        }
         });
 
         dialog.closeable().overlay().show();
