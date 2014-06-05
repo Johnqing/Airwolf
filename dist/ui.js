@@ -92,6 +92,7 @@
 	}
 
 	window.aw = window.Airwolf = Airwolf;
+	window.aw.util = {};
 	window.pageConfig = window.pageConfig || {};
 
 })(jQuery, window, document);
@@ -615,6 +616,11 @@ aw.ui.dialog = {
 	init: function(config){
 		return new Dialog(config);
 	},
+	/**
+	 * 报错
+	 * @param error
+	 * @param config
+	 */
 	error: function(error, config){
 		var title = config.title || '操作失败';
 		var errStr = '<div class="validator-error '+(config.cls || '')+'">' +
@@ -630,6 +636,9 @@ aw.ui.dialog = {
 		});
 		dialog.closeable().overlay().show();
 	},
+	/**
+	 * 锁定
+	 */
 	lock: function(){
 		if(pageConfig.source != 1) {
 			location.href = '/error/depositExp?type=lock';
@@ -776,11 +785,36 @@ function killAllBox(id){
 	});
 }
 
-// 内容变化
+/**
+ * 级联菜单
+ * @param event
+ * @returns {boolean}
+ * @private
+ */
 function _onchange(event){
 	var node = $('[data-select-box='+event.data.ref+']');
 	if(!node.length) return false;
 	// ajax
+	var url = event.data.refUrl.replace('{{value}}', encodeURIComponent(event.data.$this.attr("value")));
+	aw.ajax.json({
+		type: 'get',
+		url: url,
+		success: function(data){
+			var html = '';
+
+			$.each(data, function(i){
+				if (data[i] && data[i].length > 1){
+					html += '<option value="'+data[i][0]+'">' + data[i][1] + '</option>';
+				}
+			});
+
+			var refNode = node.parents("div.ui-select-box:first");
+			node.html(html).insertAfter(refNode);
+			refNode.remove();
+			node.trigger("change")
+			aw.ui.select.init(node);
+		}
+	})
 
 }
 
@@ -948,3 +982,226 @@ aw.ui.select = {
 	}
 }
 })(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:\"></a>\r\n\t</div>\r\n</div>\r\n<ul class=\"ui-select-options\"></ul>");
+;(function(aw){
+/**
+ * 日期格式化
+ * @param  {Date} text   需要格式化的日期
+ * @param  {String} fs 日期格式。如：yyyy-MM-dd
+ * @return {String}        格式化后的日期
+ */
+function formatDate(text, fs){
+	var format;
+	var y = text.getFullYear().toString(),
+		o = {
+			M: text.getMonth()+1, //month
+			d: text.getDate(), //day
+			h: text.getHours(), //hour
+			m: text.getMinutes(), //minute
+			s: text.getSeconds() //second
+		};
+	format = fs.replace(/(y+)/ig, function(a, b) {
+		return y.substr(4 - Math.min(4, b.length));
+	});
+	for (var i in o) {
+		format = format.replace(new RegExp('(' + i + '+)', 'g'), function(a, b) {
+			return (o[i] < 10 && b.length > 1) ? '0' + o[i] : o[i];
+		});
+	}
+	return format;
+}
+
+/**
+ * 字符串解析为日期
+ * @param  {String} text   日期字符串
+ * @param  {String} format 解析格式
+ * @return {Date}        新日期
+ */
+function parseDate(text){
+	//格式化日期
+	var textArr = text.split(reNoWord);
+	var formatArr = formatString.split(reNoWord)
+	// 初始化日期
+	var _date = new Date(0);
+
+	for (var i = 0; i < formatArr.length; i++) {
+		var fm = formatArr[i],
+			t = textArr[i];
+
+		if (/y{4}/.test(fm)){
+			_date.setFullYear(parseInt(t));
+		}else if(/y{2}/.test(fm)){
+			_date.setYear(parseInt(t, 10));
+		}else if (/M{1,2}/.test(fm)) {
+			_date.setMonth(parseInt(t, 10) - 1);
+		} else if (/d{1,2}/.test(fm)) {
+			_date.setDate(parseInt(t, 10));
+		} else if (/H{1,2}/.test(fm)) {
+			_date.setHours(parseInt(t, 10));
+		} else if (/m{1,2}/.test(fm)) {
+			_date.setMinutes(parseInt(t, 10));
+		} else if (/s{1,2}/.test(fm)) {
+			_date.setSeconds(parseInt(t, 10));
+		} else {
+			continue;
+		}
+
+	}
+	return _date;
+}
+
+//闰月年计算
+function isLeapYear(year){
+	// http://stackoverflow.com/a/4881951
+	return year % 4 === 0 && year % 100 !== 0 || year % 400 === 0;
+}
+
+function getDaysInMonth(year, month){
+	return [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month];
+}
+// 判断日期是否相等
+function compareDates(a, b){
+	return a.getTime() === b.getTime();
+}
+/**
+ * 设置日期
+ * @param time
+ * @returns {*}
+ */
+function setDate(time){
+	if(!time) return '';
+	time = time.split(/[^\d]/g);
+	var date = new Date();
+	date.setUTCFullYear(time[0], time[1] - 1, time[2]);
+	date.setUTCHours(0, 0, 0, 0);
+	return date;
+}
+
+// 暴露给qPay的日期方法
+aw.util.date = {
+	format: formatDate,
+	getDaysInMonth: getDaysInMonth,
+	isLeapYear: isLeapYear,
+	parse: parseDate,
+	setDate: setDate
+};
+})(aw);
+;(function(aw, html){
+var Slider = aw.Class.create({
+	init: function(el, config){
+		var self = this;
+		self.el = el;
+		self.config = config;
+		el.addClass('ui-slider-box')
+		var nodes = el.find(config.child);
+		nodes.addClass('slider')
+		self.total = nodes.length;
+
+		if(self.total <= 1)
+			return
+		// ms * 1000 = s
+		self.time = config.time * 1000;
+		self.current = 1;
+		self.timer = null;
+
+		var cNodes = self.childNode = nodes.children();
+
+		// fixed: default not have animate
+		cNodes.css('opacity', 0);
+
+		self.createBtn();
+		self.bindEvent();
+		self._style(1);
+		self.timer = setInterval(function(){
+			self.setTime();
+		}, self.time);
+
+		//
+
+		this.on('click_tab', config.clickTab);
+
+	},
+	createBtn: function(){
+		var self = this;
+		var template = $(html);
+		template.addClass(self.config.btnClass);
+		var btn = '';
+		for(var i=0; i<self.total; i++){
+				btn += '<a href="javascript:;">'+(i+1)+'</a>'
+		}
+		template.html(btn);
+		self.btnBox = template;
+		self.el.after(template);
+	},
+	bindEvent: function(){
+		var self = this;
+
+		self.btnBox.on('click', 'a', function(){
+			var $this = $(this);
+			var n = $this.index() + 1;
+			this.emit('click_tab', n);
+
+			self.toASpecificPage(n);
+			clearInterval(self.timer);
+
+			self.timer = setInterval(function(){
+				self.setTime()
+			}, self.time)
+
+		});
+	},
+	_style: function(n){
+		var zIndex = n ? 11 : 10;
+		var elem = this.el.find(".current");
+		elem.parent().css("zIndex", zIndex);
+		elem.stop(true).animate({'opacity': n}, 'slow');
+	},
+	toASpecificPage: function(index){
+		var self = this;
+		self._style(0);
+		self.current = index;
+		self.changePage();
+		self._style(1);
+	},
+	changePage: function(){
+		var self = this;
+		self.childNode.removeClass("current");
+		self.el.children(":nth-child(" + self.current + ")").children().addClass("current");
+		self.btnBox.children("a").removeClass("active");
+		self.btnBox.children("a:nth-child(" + self.current + ")").addClass("active");
+	},
+	setTime: function(){
+		var self = this;
+		self._style(0);
+		self.toNextPage();
+		self._style(1);
+	},
+	toNextPage: function(){
+		var self = this;
+		self.current == self.total ? self.current = 1 : self.current++;
+
+		self.changePage();
+	}
+}, aw.ui.Emitter);
+
+aw.ui.slider = {
+	init: function(els, config){
+		els = $(els);
+		if(!els.length) return;
+
+		config = aw.extend({
+			cls: 'active',
+			eventType: 'click',
+			btnClass: 'slider-number-box',
+			child: 'li',
+			//此处为秒
+			time: 5,
+			clickTab: aw.noop
+		},config);
+
+		return els.each(function(){
+			new Slider($(this), config);
+		});
+
+	}
+}
+})(aw, "<div class=\"ui-slider-btn-box\"></div>");

@@ -1,0 +1,35 @@
+.ui-slider-box{
+    position: relative
+}
+.ui-slider-box,
+.ui-slider-box .slider{
+    overflow: hidden;
+    width: 100%
+}
+
+.ui-slider-box .slider{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 11;
+}
+.ui-slider-box .slider-cur{
+    z-index: 12
+}
+/* btn
+===================*/
+.ui-slider-btn-box {
+    text-align: center
+}
+.ui-slider-btn-box a {
+    background: #e0e0e0;
+    display: inline-block;
+    height: 0;
+    margin: 0 5px;
+    overflow: hidden;
+    padding-top: 8px;
+    width: 30px
+}
+.ui-slider-btn-box .active {
+    background: #3eaf0e
+}
