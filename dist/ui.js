@@ -1256,10 +1256,6 @@ var Calendar = aw.Class.create({
 
 		for(var i=0; i<cells; i++){
 			var _dy = 1 + (i - week);
-			// 索引 ++
-			if(i%7 == 0 && i){
-				index++;
-			}
 			// 对应日期
 			var day = util.setDate(year, month+1, _dy);
 			self.setDays(_dy, {
@@ -1288,6 +1284,10 @@ var Calendar = aw.Class.create({
 				})()
 			});
 
+			if(++r == 7){
+				r = 0;
+				index++;
+			}
 		}
 	},
 	clearGroup: function(){
