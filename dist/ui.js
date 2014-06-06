@@ -1093,17 +1093,6 @@ aw.util.date = {
 };
 })(aw);
 ;(function(aw, html){
-var nowId;
-function kill(id){
-	if(nowId != id){
-		var node = $('[data-calendar-box='+nowId+']');
-		if(node.length){
-			node.remove();
-		}
-		$(document).off("click", kill);
-	}
-}
-
 function getPos(el){
 	var p = el.offset(),
 		borderWidth = parseInt(el.css('border-top-width')) * 2;
@@ -1115,7 +1104,7 @@ function getPos(el){
 
 var defaultConf = {
 	isOpenShow: false,
-	eventType: 'focus',
+	eventType: 'click',
 	pattern: 'yyyy-MM-dd',
 	// 皮肤
 	theme: 0,
@@ -1158,12 +1147,30 @@ var Calendar = aw.Class.create({
 		if(config.isOpenShow){
 			self.render();
 		}
+		self.bindEvent();
+	},
+	bindEvent: function(){
+		var self = this,
+			config = self.config;
 		// 事件绑定
-		self.el.on(config.eventType, function(e){
-			self.emit('show', e);
+		function closeCalendar(){
+			self.node.remove();
+			$(document).off('click', closeCalendar);
+		}
+		self.el.on(config.eventType, function(ev){
+			if(self.node){
+				self.node.remove()
+				self.node = null;
+			}
+			var value = ev.target.value;
+			self.setTimes(value);
+			self.render();
+
+			//
+			$(document).on('click', closeCalendar);
+			return false;
 		});
 		// 回调
-		self.on('show', self.show);
 		self.on('select', config.select);
 		self.on('open', config.open);
 		self.on('close', config.close);
@@ -1345,20 +1352,6 @@ var Calendar = aw.Class.create({
 
 		// now
 		self.data.now = aw.util.date.format(new Date())
-	},
-	show: function(ev){
-		var self = this;
-		if(self.node){
-			self.node.remove()
-			self.node = null;
-		}
-		var value = ev.target.value;
-		self.setTimes(value);
-		self.render();
-
-		//
-		kill(nowId);
-		$(document).on('click', kill);
 	}
 }, aw.ui.Emitter);
 

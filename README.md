@@ -7,3 +7,8 @@ Airwolf
 ```
 node build.js
 ```
+
+```
+lib => modules
+dist => build after
+```
