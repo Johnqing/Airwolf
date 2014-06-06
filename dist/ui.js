@@ -1076,7 +1076,10 @@ function setDate(time){
 	return date;
 }
 
-// 暴露给qPay的日期方法
+/**
+ * 日期对外接口
+ * @type {{format: formatDate, getDaysInMonth: getDaysInMonth, isLeapYear: isLeapYear, parse: parseDate, setDate: setDate}}
+ */
 aw.util.date = {
 	format: formatDate,
 	getDaysInMonth: getDaysInMonth,
@@ -1092,7 +1095,7 @@ var Slider = aw.Class.create({
 		self.el = el;
 		self.config = config;
 		el.addClass('ui-slider-box')
-		var nodes = el.find(config.child);
+		var nodes = self.nodes = el.find(config.child);
 		nodes.addClass('slider')
 		self.total = nodes.length;
 
@@ -1126,7 +1129,7 @@ var Slider = aw.Class.create({
 		template.addClass(self.config.btnClass);
 		var btn = '';
 		for(var i=0; i<self.total; i++){
-				btn += '<a href="javascript:;">'+(i+1)+'</a>'
+				btn += '<a href="javascript:;" class="'+(!i ? self.config.cls : '')+'">'+(i+1)+'</a>'
 		}
 		template.html(btn);
 		self.btnBox = template;
@@ -1151,8 +1154,9 @@ var Slider = aw.Class.create({
 	},
 	_style: function(n){
 		var zIndex = n ? 11 : 10;
-		var elem = this.el.find(".current");
-		elem.parent().css("zIndex", zIndex);
+		var pElem = this.nodes.eq(this.current-1);
+		var elem = pElem.children();
+		pElem.css("zIndex", zIndex);
 		elem.stop(true).animate({'opacity': n}, 'slow');
 	},
 	toASpecificPage: function(index){
@@ -1165,7 +1169,7 @@ var Slider = aw.Class.create({
 	changePage: function(){
 		var self = this;
 		self.childNode.removeClass("current");
-		self.el.children(":nth-child(" + self.current + ")").children().addClass("current");
+		self.nodes.eq(self.current - 1).children().addClass("current");
 		self.btnBox.children("a").removeClass("active");
 		self.btnBox.children("a:nth-child(" + self.current + ")").addClass("active");
 	},

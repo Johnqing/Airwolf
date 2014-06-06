@@ -12,6 +12,12 @@
 		}
 	</style>
 	<link rel="stylesheet" href="../dist/ui.css"/>
+	<style>
+		.layout-silder ul,
+		.layout-silder li div{
+			height: 420px;;
+		}
+	</style>
 </head>
 <body>
 
@@ -26,10 +32,21 @@
 	<option value="4">4444</option>
 </select>
 
-<script src="../lib/171.js"></script>
+<div class="layout-silder">
+	<ul id="J-silder" class="slider-box">
+		<li class="slider-cur">
+			<div style="background-image: url(https://pay.360.cn/resource/img/index/pic03.jpg?v=8fe5b.jpg);"></div>
+		</li>
+		<li>
+			<div style="background-image: url(https://pay.360.cn/resource/img/index/pic04.jpg?v=b850d.jpg);"></div>
+		</li>
+	</ul>
+</div>
+
+<script src="https://pay.360.cn/resource/js/lib/171.js"></script>
 <script src="../dist/ui.js"></script>
 <script>
-
+	aw.ui.slider.init('.layout-silder');
     $('.dialog').click(function(){
         var dialog = aw.ui.dialog.init({
             title: '标题',

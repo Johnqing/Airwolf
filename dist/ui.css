@@ -1,23 +1,4 @@
 /*
-* overlay
-======================*/
-.ui-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	opacity: 1;
-	width: 100%;
-	height: 100%;
-	background: rgba(0,0,0,.75);
-	transition: opacity 300ms;
-	z-index: 500;
-}
-
-.ui-overlay.hide {
-	pointer-events: none;
-	opacity: 0;
-}
-/*
 * dialog
 ======================*/
 .ui-dialog-box {
@@ -111,6 +92,25 @@
 .ui-dialog-box .scale.hide {
 	-webkit-transform: scale(0);
 	-moz-transform: scale(0);
+}
+/*
+* overlay
+======================*/
+.ui-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	opacity: 1;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,.75);
+	transition: opacity 300ms;
+	z-index: 500;
+}
+
+.ui-overlay.hide {
+	pointer-events: none;
+	opacity: 0;
 }
 /*
 * select
