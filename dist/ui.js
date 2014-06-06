@@ -983,13 +983,15 @@ aw.ui.select = {
 }
 })(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:\"></a>\r\n\t</div>\r\n</div>\r\n<ul class=\"ui-select-options\"></ul>");
 ;(function(aw){
+var reNoWord = /\W/;
 /**
  * 日期格式化
  * @param  {Date} text   需要格式化的日期
- * @param  {String} fs 日期格式。如：yyyy-MM-dd
+ * @param  {String} fmt 日期格式。如：yyyy-MM-dd
  * @return {String}        格式化后的日期
  */
-function formatDate(text, fs){
+function formatDate(text, fmt){
+	fmt = fmt || 'yyyy-MM-dd'
 	var format;
 	var y = text.getFullYear().toString(),
 		o = {
@@ -999,7 +1001,7 @@ function formatDate(text, fs){
 			m: text.getMinutes(), //minute
 			s: text.getSeconds() //second
 		};
-	format = fs.replace(/(y+)/ig, function(a, b) {
+	format = fmt.replace(/(y+)/ig, function(a, b) {
 		return y.substr(4 - Math.min(4, b.length));
 	});
 	for (var i in o) {
@@ -1013,13 +1015,14 @@ function formatDate(text, fs){
 /**
  * 字符串解析为日期
  * @param  {String} text   日期字符串
- * @param  {String} format 解析格式
+ * @param  {String} fmt 解析格式
  * @return {Date}        新日期
  */
-function parseDate(text){
+function parseDate(text, fmt){
+	fmt = fmt || 'yyyy-MM-dd'
 	//格式化日期
 	var textArr = text.split(reNoWord);
-	var formatArr = formatString.split(reNoWord)
+	var formatArr = fmt.split(reNoWord)
 	// 初始化日期
 	var _date = new Date(0);
 
@@ -1032,20 +1035,14 @@ function parseDate(text){
 		}else if(/y{2}/.test(fm)){
 			_date.setYear(parseInt(t, 10));
 		}else if (/M{1,2}/.test(fm)) {
-			_date.setMonth(parseInt(t, 10) - 1);
+			_date.setMonth(parseInt(t, 10) - 1, 0);
 		} else if (/d{1,2}/.test(fm)) {
 			_date.setDate(parseInt(t, 10));
-		} else if (/H{1,2}/.test(fm)) {
-			_date.setHours(parseInt(t, 10));
-		} else if (/m{1,2}/.test(fm)) {
-			_date.setMinutes(parseInt(t, 10));
-		} else if (/s{1,2}/.test(fm)) {
-			_date.setSeconds(parseInt(t, 10));
-		} else {
+		}else {
 			continue;
 		}
-
 	}
+	_date.setUTCHours(0, 0, 0, 0);
 	return _date;
 }
 
@@ -1067,11 +1064,17 @@ function compareDates(a, b){
  * @param time
  * @returns {*}
  */
-function setDate(time){
-	if(!time) return '';
-	time = time.split(/[^\d]/g);
+function setDate(year, month, _date){
 	var date = new Date();
-	date.setUTCFullYear(time[0], time[1] - 1, time[2]);
+	if(year){
+		if(aw.type(year) == 'array'){
+			var time = year.split(/[^\d]/g);
+			year = time[0];
+			month = time[1] || 1;
+			_date = time[2] || 0
+		}
+		date.setUTCFullYear(year, month - 1, _date);
+	}
 	date.setUTCHours(0, 0, 0, 0);
 	return date;
 }
@@ -1085,9 +1088,292 @@ aw.util.date = {
 	getDaysInMonth: getDaysInMonth,
 	isLeapYear: isLeapYear,
 	parse: parseDate,
-	setDate: setDate
+	setDate: setDate,
+	compareDates: compareDates
 };
 })(aw);
+;(function(aw, html){
+var nowId;
+function kill(id){
+	if(nowId != id){
+		var node = $('[data-calendar-box='+nowId+']');
+		if(node.length){
+			node.remove();
+		}
+		$(document).off("click", kill);
+	}
+}
+
+function getPos(el){
+	var p = el.offset(),
+		borderWidth = parseInt(el.css('border-top-width')) * 2;
+	return {
+		top: p.top + el.innerHeight() + borderWidth,
+		left: p.left
+	};
+}
+
+var defaultConf = {
+	isOpenShow: false,
+	eventType: 'focus',
+	pattern: 'yyyy-MM-dd',
+	// 皮肤
+	theme: 0,
+	//默认日期
+	defaultDate: null,
+	//禁用xx日期日期前，xx日期后，数组['2012-12-19', '2013-12-19']
+	disableDate: null,
+	// 日期间隔
+	range: {
+		max: 2050,
+		min: 1980
+	},
+	// 选中回调
+	select: null,
+	// 打开回调
+	open: null,
+	// 关闭回调
+	close: null
+}
+
+var Calendar = aw.Class.create({
+	init: function(el, config){
+		var self = this;
+
+		self.el = el;
+		self.config = aw.extend(defaultConf, config);
+
+		this.data = {
+			years: [],
+			dates: [],
+			currYear: '',
+			currMonth: '',
+			now: ''
+		};
+
+		self.setTimes(el.val());
+
+		var config = self.config;
+		// 默认打开就渲染
+		if(config.isOpenShow){
+			self.render();
+		}
+		// 事件绑定
+		self.el.on(config.eventType, function(e){
+			self.emit('show', e);
+		});
+		// 回调
+		self.on('show', self.show);
+		self.on('select', config.select);
+		self.on('open', config.open);
+		self.on('close', config.close);
+	},
+	setTimes: function(value){
+		var util = aw.util.date;
+		value = $.trim(value);
+		value = value ? util.parse(value) : util.setDate();
+
+		var year = value.getFullYear();
+		var month = value.getMonth();
+		var _date = value.getDate();
+
+		this.times = aw.util.date.setDate(year, month+1, _date);
+
+	},
+	render: function(){
+		var self = this;
+
+		nowId = aw.uniqueId();
+
+		self.groupQuery();
+
+		var template = NT.tpl(html, self.data);
+		var node = self.node = $(template);
+		node.attr('data-calendar-box', nowId);
+
+		var obj = getPos(self.el);
+		node.css({
+			position: 'absolute',
+			left: obj.left,
+			top: obj.top
+		});
+
+		node.appendTo('body');
+	},
+	groupQuery: function(){
+		var self = this,
+			config = self.config,
+			util = aw.util.date;
+
+		var maxYear = config.range.max,
+			minYear = config.range.min;
+
+		// maxYear 必须大于 minYear
+		if(maxYear - minYear < 0)
+			throw new Error('incorrect time interval!');
+
+		var year = self.times.getFullYear(),
+			month = self.times.getMonth(),
+			_date_ = self.times.getDate(),
+			_date = util.setDate(year, month+1, _date_)
+
+		// 大于范围
+		if(year > maxYear){
+			self.times = util.setDate(maxYear, 1, 1);
+			return;
+		}
+		// 小于范围
+		if(year < minYear){
+			self.times = util.setDate(minYear, 1, 1);
+			return;
+		}
+
+		self.clearGroup();
+		self.setYM();
+
+		var now = util.setDate();
+		var days = util.getDaysInMonth(year, month + 1);
+		// 获取当前是周几
+		var week = util.setDate(year, month+1, 1).getDay();
+		var r = 0;
+
+		var cells = days + week,
+			after = cells;
+
+		while(after > 7){
+			after -= 7;
+		}
+
+		for(var i=0; i<7; i++){
+			self.data.dates[i] = [];
+		}
+
+		cells += 7 - after;
+
+		var index = 0;
+
+		for(var i=0; i<cells; i++){
+			var _dy = 1 + (i - week);
+			// 索引 ++
+			if(i%7 == 0 && i){
+				index++;
+			}
+			// 对应日期
+			var day = util.setDate(year, month+1, _dy);
+			self.setDays(_dy, {
+				index: index,
+				fullDate: util.format(day),
+				isWeek: (r == 0 || r == 6),
+				isSelected: util.compareDates(day, _date),
+				isToday: util.compareDates(day, now),
+				isEmpty: i < week || i >= (days + week),
+				isDisabled: (function(){
+					var disable = config.disableDate;
+					if (!disable){
+						return false;
+					}
+					var b = util.parse(disable[0]),
+						a = util.parse(disable[1]);
+
+					b.setHours(0,0,0,0);
+					a.setHours(0,0,0,0);
+
+					if (b.getTime() <= day.getTime() && a.getTime() >= day.getTime()) {
+						return false;
+					};
+
+					return true;
+				})()
+			});
+
+		}
+	},
+	clearGroup: function(){
+		this.data.dates = [];
+	},
+	/**
+	 * 组织当前日期
+	 * @param curr
+	 * @param opts
+	 */
+	setDays: function(curr, opts){
+		var self = this;
+		var cls = 'day';
+		if (opts.isDisabled){
+			cls = 'disable'
+		}
+
+		if (opts.isToday){
+			cls += ' today'
+		}
+
+		if (opts.isSelected){
+			cls += ' select'
+		}
+
+		if (opts.isWeek){
+			cls += ' week'
+		}
+
+		if (opts.isEmpty){
+			curr = '';
+			cls = 'empty'
+		}
+
+		self.data.dates[opts.index].push({
+			fullDate: opts.fullDate,
+			cls: cls,
+			date: curr
+		})
+
+	},
+	setYM: function(){
+		var self = this
+		var range = self.config.range
+
+		// 年份
+		var maxYear = range.max,
+			minYear = range.min;
+
+		for (; minYear <= maxYear; minYear++) {
+			self.data.years.push(minYear);
+		};
+		self.data.currYear = self.times.getFullYear();
+
+		// 月份
+		self.data.currMonth = self.times.getMonth() + 1
+
+		// now
+		self.data.now = aw.util.date.format(new Date())
+	},
+	show: function(ev){
+		var self = this;
+		if(self.node){
+			self.node.remove()
+			self.node = null;
+		}
+		var value = ev.target.value;
+		self.setTimes(value);
+		self.render();
+
+		//
+		kill(nowId);
+		$(document).on('click', kill);
+	}
+}, aw.ui.Emitter);
+
+aw.ui.calendar = {
+	init: function(els, config){
+		els = $(els);
+		if(!els.length)
+			return;
+
+		return els.each(function(){
+			new Calendar($(this), config);
+		});
+	}
+}
+})(aw, "<div class=\"ui-calendar-box\" data-calendar-box=\"\">\r\n\t<div class=\"title\" data-cal=\"title\">\r\n\t\t<div class=\"label label-year\" data-calendar-time=\"year\">\r\n\t\t\t<select class=\"select select-year\">\r\n\t\t\t\t<% for (var i = 0; i < years.length; i++) {%>\r\n\t\t\t\t<option value=\"<%= years[i] %>\" <% if(years[i] == currYear) { %> selected <% } %>><%= years[i] %>年</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<div class=\"label label-month\" data-calendar-time=\"month\">\r\n\t\t\t<select class=\"select select-month\">\r\n\t\t\t\t<% for (var i = 0; i < 12; i++) {%>\r\n\t\t\t\t\t<option value=\"<%= i+1 %>\" <% if(i == currMonth) {%>selected<% }%>><%= i %>月</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"prev\" class=\"prev\">&lt;</a>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"next\" class=\"next\">&gt;</a>\r\n\t</div>\r\n\t<table cellpadding=\"0\" cellspacing=\"0\" class=\"table\" data-calendar=\"main\">\r\n\t\t<tr>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"日\">\r\n\t                日\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"一\">\r\n\t                一\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"二\">\r\n\t                二\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"三\">\r\n\t                三\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"四\">\r\n\t                四\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"五\">\r\n\t                五\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"六\">\r\n\t                六\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t</tr>\r\n\t\t<% for (var i = 0; i < dates.length; i++) {%>\r\n\t\t<tr>\r\n\t\t\t<% for (var k = 0; k < dates[i].length; k++) {%>\r\n\t\t\t\t<td data-calendar-day=\"<%= dates[i][k].fullDate %>\" class=\"<%= dates[i][k].cls %>\"><span><%= dates[i][k].date %></span></td>\r\n\t\t\t<% } %>\r\n\t\t</tr>\r\n\t\t<% } %>\r\n\t</table>\r\n\t<div class=\"footer\">\r\n\t\t<button class=\"back-now\" data-calendar-day=\"<%= now %>\">今天</button>\r\n\t</div>\r\n</div>");
 ;(function(aw, html){
 var Slider = aw.Class.create({
 	init: function(el, config){

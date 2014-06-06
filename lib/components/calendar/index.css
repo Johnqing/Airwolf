@@ -1,0 +1,122 @@
+.ui-calendar-box {
+	z-index: 999;
+	display: block;
+	width: 245px;
+	background: #fff;
+	font-size: 12px;
+	color: #333;
+	font-family: Arial,sans-serif
+}
+
+.ui-calendar-box .title,
+.ui-calendar-box .prev,
+.ui-calendar-box .next {
+	height: 34px
+}
+
+.ui-calendar-box .title {
+	position: relative;
+	border: 1px solid #e2e2e2;
+	border-bottom: 0;
+	background: #f3f3f3;
+	text-align: center
+}
+
+.ui-calendar-box .prev,
+.ui-calendar-box .next {
+	overflow: hidden;
+	display: block;
+	width: 18px;
+	white-space: nowrap;
+	line-height: 34px;
+	color: #999;
+	text-decoration: none;
+	outline: none;
+	cursor: pointer
+}
+
+.ui-calendar-box .prev {
+	float: left
+}
+
+.ui-calendar-box .next {
+	float: right
+}
+
+.ui-calendar-box select {
+	cursor: pointer;
+	position: absolute;
+	z-index: 9998;
+	margin: 0;
+	left: 30px;
+	top: 7px;
+	width: 70px;
+	opacity: 1;
+	visibility: visible
+}
+
+.ui-calendar-box .label-month {
+	margin-left: 19px
+}
+
+.ui-calendar-box .select-month {
+	width: 60px;
+	left: 150px
+}
+
+.ui-calendar-box .table,
+.ui-calendar-box .table td,
+.ui-calendar-box .footer {
+	border: 1px solid #e2e2e2
+}
+
+.ui-calendar-box .table {
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0
+}
+
+.ui-calendar-box .table td,
+.ui-calendar-box .table span {
+	width: 33px;
+	height: 25px;
+	line-height: 25px;
+	text-align: center
+}
+
+.ui-calendar-box .table span {
+	display: block;
+	cursor: pointer
+}
+
+.ui-calendar-box .table .week {
+	color: #3eaf0e
+}
+
+.ui-calendar-box .table .today {
+	background: #c7eab8
+}
+
+.ui-calendar-box .table .empty span,
+.ui-calendar-box .table .disable span {
+	cursor: default;
+	color: #999
+}
+
+.ui-calendar-box .table .select {
+	background: #3eaf0e;
+	color: #fff
+}
+
+.ui-calendar-box .footer {
+	border-top: 0;
+	padding: 5px 0;
+	text-align: center
+}
+
+.ui-calendar-box .footer a {
+	display: inline-block;
+	margin-right: 5px;
+	text-decoration: none;
+	color: #666
+}

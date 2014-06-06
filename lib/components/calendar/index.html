@@ -1,0 +1,69 @@
+<div class="ui-calendar-box" data-calendar-box="">
+	<div class="title" data-cal="title">
+		<div class="label label-year" data-calendar-time="year">
+			<select class="select select-year">
+				<% for (var i = 0; i < years.length; i++) {%>
+				<option value="<%= years[i] %>" <% if(years[i] == currYear) { %> selected <% } %>><%= years[i] %>年</option>
+				<% }%>
+			</select>
+		</div>
+		<div class="label label-month" data-calendar-time="month">
+			<select class="select select-month">
+				<% for (var i = 0; i < 12; i++) {%>
+					<option value="<%= i+1 %>" <% if(i == currMonth) {%>selected<% }%>><%= i %>月</option>
+				<% }%>
+			</select>
+		</div>
+		<a href="javascript:;" data-calendar-btn="prev" class="prev">&lt;</a>
+		<a href="javascript:;" data-calendar-btn="next" class="next">&gt;</a>
+	</div>
+	<table cellpadding="0" cellspacing="0" class="table" data-calendar="main">
+		<tr>
+			<th scope="col">
+	            <span class="week" title="日">
+	                日
+	            </span>
+			</th>
+			<th scope="col">
+	            <span class="week" title="一">
+	                一
+	            </span>
+			</th>
+			<th scope="col">
+	            <span class="week" title="二">
+	                二
+	            </span>
+			</th>
+			<th scope="col">
+	            <span class="week" title="三">
+	                三
+	            </span>
+			</th>
+			<th scope="col">
+	            <span class="week" title="四">
+	                四
+	            </span>
+			</th>
+			<th scope="col">
+	            <span class="week" title="五">
+	                五
+	            </span>
+			</th>
+			<th scope="col">
+	            <span class="week" title="六">
+	                六
+	            </span>
+			</th>
+		</tr>
+		<% for (var i = 0; i < dates.length; i++) {%>
+		<tr>
+			<% for (var k = 0; k < dates[i].length; k++) {%>
+				<td data-calendar-day="<%= dates[i][k].fullDate %>" class="<%= dates[i][k].cls %>"><span><%= dates[i][k].date %></span></td>
+			<% } %>
+		</tr>
+		<% } %>
+	</table>
+	<div class="footer">
+		<button class="back-now" data-calendar-day="<%= now %>">今天</button>
+	</div>
+</div>
