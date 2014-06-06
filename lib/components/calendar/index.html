@@ -58,7 +58,7 @@
 		<% for (var i = 0; i < dates.length; i++) {%>
 		<tr>
 			<% for (var k = 0; k < dates[i].length; k++) {%>
-				<td data-calendar-day="<%= dates[i][k].fullDate %>" class="<%= dates[i][k].cls %>"><span><%= dates[i][k].date %></span></td>
+				<td class="<%= dates[i][k].cls %>"><span data-calendar-day="<%= dates[i][k].fullDate %>"><%= dates[i][k].date %></span></td>
 			<% } %>
 		</tr>
 		<% } %>

@@ -1022,28 +1022,7 @@ function parseDate(text, fmt){
 	fmt = fmt || 'yyyy-MM-dd'
 	//格式化日期
 	var textArr = text.split(reNoWord);
-	var formatArr = fmt.split(reNoWord)
-	// 初始化日期
-	var _date = new Date(0);
-
-	for (var i = 0; i < formatArr.length; i++) {
-		var fm = formatArr[i],
-			t = textArr[i];
-
-		if (/y{4}/.test(fm)){
-			_date.setFullYear(parseInt(t));
-		}else if(/y{2}/.test(fm)){
-			_date.setYear(parseInt(t, 10));
-		}else if (/M{1,2}/.test(fm)) {
-			_date.setMonth(parseInt(t, 10) - 1, 0);
-		} else if (/d{1,2}/.test(fm)) {
-			_date.setDate(parseInt(t, 10));
-		}else {
-			continue;
-		}
-	}
-	_date.setUTCHours(0, 0, 0, 0);
-	return _date;
+	return setDate(textArr);
 }
 
 //闰月年计算
@@ -1067,8 +1046,11 @@ function compareDates(a, b){
 function setDate(year, month, _date){
 	var date = new Date();
 	if(year){
+		var time = year;
+		if(arguments.length == 1 && aw.type(time) == 'year'){
+			time = year.split(/[^\d]/g);
+		}
 		if(aw.type(year) == 'array'){
-			var time = year.split(/[^\d]/g);
 			year = time[0];
 			month = time[1] || 1;
 			_date = time[2] || 0
@@ -1153,7 +1135,17 @@ var Calendar = aw.Class.create({
 		var self = this,
 			config = self.config;
 		// 事件绑定
+
+		self.on('chose_date', function(el){
+			if(el.hasClass('.disabled'))
+				return;
+			var value = el.attr('data-calendar-day');
+			self.el.val(value);
+			closeCalendar();
+		});
+
 		function closeCalendar(){
+			self.node.off('click');
 			self.node.remove();
 			$(document).off('click', closeCalendar);
 		}
@@ -1166,6 +1158,9 @@ var Calendar = aw.Class.create({
 			self.setTimes(value);
 			self.render();
 
+			self.node.on('click', '.day', function(evt){
+				self.emit('chose_date', $(evt.target))
+			});
 			//
 			$(document).on('click', closeCalendar);
 			return false;
@@ -1366,7 +1361,7 @@ aw.ui.calendar = {
 		});
 	}
 }
-})(aw, "<div class=\"ui-calendar-box\" data-calendar-box=\"\">\r\n\t<div class=\"title\" data-cal=\"title\">\r\n\t\t<div class=\"label label-year\" data-calendar-time=\"year\">\r\n\t\t\t<select class=\"select select-year\">\r\n\t\t\t\t<% for (var i = 0; i < years.length; i++) {%>\r\n\t\t\t\t<option value=\"<%= years[i] %>\" <% if(years[i] == currYear) { %> selected <% } %>><%= years[i] %>年</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<div class=\"label label-month\" data-calendar-time=\"month\">\r\n\t\t\t<select class=\"select select-month\">\r\n\t\t\t\t<% for (var i = 0; i < 12; i++) {%>\r\n\t\t\t\t\t<option value=\"<%= i+1 %>\" <% if(i == currMonth) {%>selected<% }%>><%= i %>月</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"prev\" class=\"prev\">&lt;</a>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"next\" class=\"next\">&gt;</a>\r\n\t</div>\r\n\t<table cellpadding=\"0\" cellspacing=\"0\" class=\"table\" data-calendar=\"main\">\r\n\t\t<tr>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"日\">\r\n\t                日\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"一\">\r\n\t                一\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"二\">\r\n\t                二\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"三\">\r\n\t                三\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"四\">\r\n\t                四\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"五\">\r\n\t                五\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"六\">\r\n\t                六\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t</tr>\r\n\t\t<% for (var i = 0; i < dates.length; i++) {%>\r\n\t\t<tr>\r\n\t\t\t<% for (var k = 0; k < dates[i].length; k++) {%>\r\n\t\t\t\t<td data-calendar-day=\"<%= dates[i][k].fullDate %>\" class=\"<%= dates[i][k].cls %>\"><span><%= dates[i][k].date %></span></td>\r\n\t\t\t<% } %>\r\n\t\t</tr>\r\n\t\t<% } %>\r\n\t</table>\r\n\t<div class=\"footer\">\r\n\t\t<button class=\"back-now\" data-calendar-day=\"<%= now %>\">今天</button>\r\n\t</div>\r\n</div>");
+})(aw, "<div class=\"ui-calendar-box\" data-calendar-box=\"\">\r\n\t<div class=\"title\" data-cal=\"title\">\r\n\t\t<div class=\"label label-year\" data-calendar-time=\"year\">\r\n\t\t\t<select class=\"select select-year\">\r\n\t\t\t\t<% for (var i = 0; i < years.length; i++) {%>\r\n\t\t\t\t<option value=\"<%= years[i] %>\" <% if(years[i] == currYear) { %> selected <% } %>><%= years[i] %>年</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<div class=\"label label-month\" data-calendar-time=\"month\">\r\n\t\t\t<select class=\"select select-month\">\r\n\t\t\t\t<% for (var i = 0; i < 12; i++) {%>\r\n\t\t\t\t\t<option value=\"<%= i+1 %>\" <% if(i == currMonth) {%>selected<% }%>><%= i %>月</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"prev\" class=\"prev\">&lt;</a>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"next\" class=\"next\">&gt;</a>\r\n\t</div>\r\n\t<table cellpadding=\"0\" cellspacing=\"0\" class=\"table\" data-calendar=\"main\">\r\n\t\t<tr>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"日\">\r\n\t                日\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"一\">\r\n\t                一\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"二\">\r\n\t                二\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"三\">\r\n\t                三\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"四\">\r\n\t                四\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"五\">\r\n\t                五\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"六\">\r\n\t                六\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t</tr>\r\n\t\t<% for (var i = 0; i < dates.length; i++) {%>\r\n\t\t<tr>\r\n\t\t\t<% for (var k = 0; k < dates[i].length; k++) {%>\r\n\t\t\t\t<td class=\"<%= dates[i][k].cls %>\"><span data-calendar-day=\"<%= dates[i][k].fullDate %>\"><%= dates[i][k].date %></span></td>\r\n\t\t\t<% } %>\r\n\t\t</tr>\r\n\t\t<% } %>\r\n\t</table>\r\n\t<div class=\"footer\">\r\n\t\t<button class=\"back-now\" data-calendar-day=\"<%= now %>\">今天</button>\r\n\t</div>\r\n</div>");
 ;(function(aw, html){
 var Slider = aw.Class.create({
 	init: function(el, config){
