@@ -1162,7 +1162,7 @@ var Calendar = aw.Class.create({
 				self.emit('chose_date', $(evt.target))
 			});
 			//
-			//$(document).on('click', closeCalendar);
+			$(document).on('click', closeCalendar);
 			return false;
 		});
 		// 回调
@@ -1202,7 +1202,7 @@ var Calendar = aw.Class.create({
 	renderBind: function(){
 		var self = this;
 		var selectNode = self.node.find('select');
-		selectNode.off('change')
+		selectNode.off('change');
 		//bind
 		selectNode.change(function(){
 			var value = $(this).val();
@@ -1215,6 +1215,9 @@ var Calendar = aw.Class.create({
 			self.render();
 
 			return false;
+		});
+		self.node.click(function(event){
+			event.stopPropagation();
 		});
 	},
 	groupQuery: function(){
@@ -1307,6 +1310,7 @@ var Calendar = aw.Class.create({
 	},
 	clearGroup: function(){
 		this.data.dates = [];
+		this.data.years = [];
 	},
 	/**
 	 * 组织当前日期
