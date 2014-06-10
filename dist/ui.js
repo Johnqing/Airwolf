@@ -2078,7 +2078,7 @@ setMethod('remote', function(value, el, rule){
 /**
  * 空
  */
-setMethod('required', function(value, el, rule){
+setMethod('required', function(value, el){
 	if (el[0].nodeName.toLowerCase() === 'select') {
 		var v = el[0].value;
 		if(v === '0') return true;
@@ -2089,4 +2089,24 @@ setMethod('required', function(value, el, rule){
 	}
 	return $.trim(value).length > 0;
 });
+/**
+ * 确认xx(例如：确认密码)
+ */
+setMethod('equalTo', function(value, el, rule){
+	var self = this;
+	var target = self.nodes_cache[rule.parameters];
+
+	return value === aw.util.form.elValue(target);
+});
+/**
+ * 范围:
+ *
+ * [5, 8]
+ *
+ */
+setMethod('range', function(value, el, rule){
+	var param = rule.parameters;
+	return value >= param[0] && value <= param[1];
+});
+
 })(aw);
