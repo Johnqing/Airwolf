@@ -42,8 +42,11 @@
 		</li>
 	</ul>
 </div>
-
-<input type="text" class="calendar"/>
+<form action="/">
+	<input type="text" class="calendar" data-validate="calendar"/>
+	<input type="text" class="username" data-validate="username"/>
+	<a href="#" class="validate-btn">click</a>
+</form>
 
 <script src="https://pay.360.cn/resource/js/lib/171.js"></script>
 <script src="../lib/nt.js"></script>
@@ -80,6 +83,19 @@
 	aw.ui.select.init('select');
 
 	aw.ui.calendar.init('.calendar')
+
+	aw.ui.validate.init('.validate-btn', {
+		rules: {
+			calendar: {
+				required: true
+			},
+			username: {
+				remote: {
+					url: '/'
+				}
+			}
+		}
+	});
 
 
 </script>
