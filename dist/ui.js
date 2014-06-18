@@ -1403,10 +1403,6 @@ var Calendar = aw.Class.create({
 			var value = ev.target.value;
 			self.setTimes(value);
 			self.render();
-
-			self.node.on('click', '.day', function(evt){
-				self.emit('chose_date', $(evt.target))
-			});
 			//
 			$(document).on('click', closeCalendar);
 			return false;
@@ -1444,6 +1440,11 @@ var Calendar = aw.Class.create({
 		});
 		self.renderBind();
 		node.appendTo('body');
+
+		self.node.on('click', '.day', function(evt){
+			self.emit('chose_date', $(evt.target))
+		});
+
 	},
 	renderBind: function(){
 		var self = this;
@@ -1457,7 +1458,7 @@ var Calendar = aw.Class.create({
 			var month = n <4 ? value : self.times.getMonth();
 			var year = n < 4 ? self.times.getFullYear() : value;;
 			self.setTimes(year + '-' + month + '-' + _date);
-
+			self.node.remove();
 			self.render();
 
 			return false;
@@ -1640,7 +1641,12 @@ var defaultConf = {
 	defter: 0,
 	clickTab: aw.noop
 }
-
+/**
+ * 依赖于Tabs
+ *
+ * Slider Class
+ * @type {*}
+ */
 var Slider = aw.Class.create({
 	init: function(el, config){
 		var self = this;
