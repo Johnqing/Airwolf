@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		li{
+			list-style: none;
+		}
+	</style>
+	<link rel="stylesheet" href="../dist/ui.css"/>
+</head>
+<body>
+
+<form action="/">
+	<input type="text" class="email" data-validate="email"/>
+	<input type="text" class="username" data-validate="username"/>
+	<a href="#" class="validate-btn">click</a>
+</form>
+
+<script src="https://pay.360.cn/resource/js/lib/171.js"></script>
+<script src="../lib/nt.js"></script>
+<script src="../dist/ui.js"></script>
+<script>
+	aw.ui.validate.init('.validate-btn', {
+		rules: {
+			email: {
+				required: true
+			},
+			username: {
+				remote: {
+					url: '/'
+				}
+			}
+		}
+	});
+
+
+</script>
+</body>
+</html>

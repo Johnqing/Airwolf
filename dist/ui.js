@@ -652,6 +652,132 @@ aw.ajax = {
 	}
 }
 })(aw);
+;(function(aw){
+
+var defaultConf = {
+	menu: 'li',
+	box: null,
+	// 动画切换的时间
+	time: 3,
+	// 延迟触发menu
+	defter: 0,
+	cls: 'active',
+	eventType: 'click',
+	autoPlay: false,
+	after: aw.noop
+}
+/**
+ * Tabs Class
+ * @type {*}
+ */
+var Tabs = aw.ui.Tabs = aw.Class.create({
+	init: function(el, config){
+		this.el = el;
+
+		config = this.config = aw.extend(defaultConf, config);
+
+		this.menu = el.find(config.menu);
+		this.box = $(config.box);
+
+		this.total = this.menu.length - 1;
+		this.currIndex = 0;
+		this.time = config.time * 1000;
+		this.defer = config.defter * 1000;
+	},
+	start: function(){
+		var self = this;
+		var config = self.config;
+
+		self.setStyle(true);
+
+		if(config.autoPlay){
+			self.timer = setInterval(function(){
+				self.setTime();
+			}, self.time);
+		}
+
+		self.bindEvent();
+	},
+	bindEvent: function(){
+		var self = this,
+			config = self.config,
+			menu = config.menu,
+			defer = config.defer
+
+		self.el.on(config.eventType, menu, function(){
+			var $this = $(this),
+				n = $this.index();
+
+			clearInterval(self.defterTimer);
+			self.defterTimer = setTimeout(function(){
+				self.toASpecificPage.call(self, n);
+				// 动画切换
+				clearInterval(self.timer);
+				self.timer = setInterval(function(){
+					self.setTime()
+				}, self.time)
+
+			}, defer);
+
+		});
+
+		// 只有moseout的时候 清除延迟
+		if(!defer) return
+		self.el.on('mouseout', menu, function(){
+			clearTimeout(self.defterTimer);
+		})
+
+	},
+	toASpecificPage: function(index){
+		var self = this;
+		self.currIndex = index;
+		self.changePage();
+		self.setStyle(true);
+	},
+	/**
+	 * 设置样式
+	 */
+	setStyle: function(){
+		var self = this;
+		var config = self.config;
+		self.menu.eq(self.currIndex).addClass(config.cls);
+		self.box.addClass('ui-tabs-cont');
+	},
+	changePage: function(){
+		var self = this;
+		var config = self.config;
+		var n = self.currIndex;
+
+		var box = self.box.eq(n);
+		box.addClass('ui-tabs-cont-'+config.cls).siblings(config.box).removeClass('ui-tabs-cont-'+config.cls);
+		box.stop(true).fadeIn(500).siblings(config.box).fadeOut(500);
+
+		self.menu.removeClass(config.cls).eq(n).addClass(config.cls);;
+	},
+	setTime: function(){
+		var self = this;
+		self.toNextPage();
+		self.setStyle();
+	},
+	toNextPage: function(){
+		var self = this;
+		self.currIndex == self.total ? self.currIndex = 0 : self.currIndex++;
+		self.changePage();
+	}
+}, aw.ui.Emitter);
+
+aw.ui.tabs = {
+	init: function(els, config){
+		els = $(els);
+		if(!els.length) return;
+
+		return els.each(function(){
+			new Tabs($(this), config).start();
+		});
+
+	}
+}
+})(aw);
 ;(function(aw, html){
 var defaultConfig = {
 	close: aw.noop
@@ -1502,119 +1628,58 @@ aw.ui.calendar = {
 }
 })(aw, "<div class=\"ui-calendar-box\" data-calendar-box=\"\">\r\n\t<div class=\"title\" data-cal=\"title\">\r\n\t\t<div class=\"label label-year\" data-calendar-time=\"year\">\r\n\t\t\t<select class=\"select select-year\">\r\n\t\t\t\t<% for (var i = 0; i < years.length; i++) {%>\r\n\t\t\t\t<option value=\"<%= years[i] %>\" <% if(years[i] == currYear) { %> selected <% } %>><%= years[i] %>年</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<div class=\"label label-month\" data-calendar-time=\"month\">\r\n\t\t\t<select class=\"select select-month\">\r\n\t\t\t\t<% for (var i = 1; i <= 12; i++) {%>\r\n\t\t\t\t\t<option value=\"<%= i %>\" <% if(i == currMonth) {%>selected<% }%>><%= i %>月</option>\r\n\t\t\t\t<% }%>\r\n\t\t\t</select>\r\n\t\t</div>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"prev\" class=\"prev\">&lt;</a>\r\n\t\t<a href=\"javascript:;\" data-calendar-btn=\"next\" class=\"next\">&gt;</a>\r\n\t</div>\r\n\t<table cellpadding=\"0\" cellspacing=\"0\" class=\"table\" data-calendar=\"main\">\r\n\t\t<tr>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"日\">\r\n\t                日\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"一\">\r\n\t                一\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"二\">\r\n\t                二\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"三\">\r\n\t                三\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"四\">\r\n\t                四\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"五\">\r\n\t                五\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t\t<th scope=\"col\">\r\n\t            <span class=\"week\" title=\"六\">\r\n\t                六\r\n\t            </span>\r\n\t\t\t</th>\r\n\t\t</tr>\r\n\t\t<% for (var i = 0; i < dates.length; i++) {%>\r\n\t\t<tr>\r\n\t\t\t<% for (var k = 0; k < dates[i].length; k++) {%>\r\n\t\t\t\t<td class=\"<%= dates[i][k].cls %>\"><span data-calendar-day=\"<%= dates[i][k].fullDate %>\"><%= dates[i][k].date %></span></td>\r\n\t\t\t<% } %>\r\n\t\t</tr>\r\n\t\t<% } %>\r\n\t</table>\r\n\t<div class=\"footer\">\r\n\t\t<button class=\"back-now\" data-calendar-day=\"<%= now %>\">今天</button>\r\n\t</div>\r\n</div>");
 ;(function(aw, html){
+var defaultConf = {
+	cls: 'active',
+	eventType: 'click',
+	btnClass: 'slider-number-box',
+	menu: 'a',
+	child: 'li',
+	autoPlay: true,
+	//此处为秒
+	time: 5,
+	defter: 0,
+	clickTab: aw.noop
+}
+
 var Slider = aw.Class.create({
 	init: function(el, config){
 		var self = this;
-		self.el = el;
-		self.config = config;
-		el.addClass('ui-slider-box')
-		var nodes = self.nodes = el.find(config.child);
-		nodes.addClass('slider')
-		self.total = nodes.length;
+		config = self.config = aw.extend(defaultConf, config);
 
-		if(self.total <= 1)
-			return
-		// ms * 1000 = s
-		self.time = config.time * 1000;
-		self.current = 1;
-		self.timer = null;
+		self.wrap = el;
+		self.box = el.find(config.child);
 
-		var cNodes = self.childNode = nodes.children();
+		el.addClass('ui-slider-box');
 
-		// fixed: default not have animate
-		cNodes.css('opacity', 0);
+		self.createMenu();
 
-		self.createBtn();
-		self.bindEvent();
-		self._style(1);
-		self.timer = setInterval(function(){
-			self.setTime();
-		}, self.time);
+		this.total = this.menu.length - 1;
+		this.currIndex = 0;
 
-		//
+		this.time = config.time * 1000;
+		this.defer = config.defter * 1000;
 
-		this.on('click_tab', config.clickTab);
-
+		self.start();
 	},
-	createBtn: function(){
+	createMenu: function(){
 		var self = this;
 		var template = $(html);
 		template.addClass(self.config.btnClass);
 		var btn = '';
-		for(var i=0; i<self.total; i++){
+		for(var i=0; i<=self.total; i++){
 				btn += '<a href="javascript:;" class="'+(!i ? self.config.cls : '')+'">'+(i+1)+'</a>'
 		}
 		template.html(btn);
-		self.btnBox = template;
-		self.el.after(template);
-	},
-	bindEvent: function(){
-		var self = this;
-
-		self.btnBox.on('click', 'a', function(){
-			var $this = $(this);
-			var n = $this.index() + 1;
-			this.emit('click_tab', n);
-
-			self.toASpecificPage(n);
-			clearInterval(self.timer);
-
-			self.timer = setInterval(function(){
-				self.setTime()
-			}, self.time)
-
-		});
-	},
-	_style: function(n){
-		var zIndex = n ? 11 : 10;
-		var pElem = this.nodes.eq(this.current-1);
-		var elem = pElem.children();
-		pElem.css("zIndex", zIndex);
-		elem.stop(true).animate({'opacity': n}, 'slow');
-	},
-	toASpecificPage: function(index){
-		var self = this;
-		self._style(0);
-		self.current = index;
-		self.changePage();
-		self._style(1);
-	},
-	changePage: function(){
-		var self = this;
-		self.childNode.removeClass("current");
-		self.nodes.eq(self.current - 1).children().addClass("current");
-		self.btnBox.children("a").removeClass("active");
-		self.btnBox.children("a:nth-child(" + self.current + ")").addClass("active");
-	},
-	setTime: function(){
-		var self = this;
-		self._style(0);
-		self.toNextPage();
-		self._style(1);
-	},
-	toNextPage: function(){
-		var self = this;
-		self.current == self.total ? self.current = 1 : self.current++;
-
-		self.changePage();
+		self.el = template;
+		self.menu = template.find('a');
+		self.wrap.after(template);
 	}
-}, aw.ui.Emitter);
+}, aw.ui.Tabs, aw.ui.Emitter);
 
 aw.ui.slider = {
 	init: function(els, config){
 		els = $(els);
 		if(!els.length) return;
-
-		config = aw.extend({
-			cls: 'active',
-			eventType: 'click',
-			btnClass: 'slider-number-box',
-			child: 'li',
-			//此处为秒
-			time: 5,
-			clickTab: aw.noop
-		},config);
-
 		return els.each(function(){
 			new Slider($(this), config);
 		});

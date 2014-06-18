@@ -7,9 +7,6 @@
 			margin: 0;
 			padding: 0;
 		}
-		li{
-			list-style: none;
-		}
 	</style>
 	<link rel="stylesheet" href="../dist/ui.css"/>
 	<style>
@@ -20,84 +17,13 @@
 	</style>
 </head>
 <body>
-
-<a class="dialog" href="#">dialog</a>
-<a class="confirm" href="#">confirm</a>
-
-<select name="q">
-	<option value="0">0000000</option>
-	<option value="1">111111</option>
-	<option value="2">222222</option>
-	<option value="3">33333333</option>
-	<option value="4">4444</option>
-</select>
-
-<div class="layout-silder">
-	<ul id="J-silder" class="slider-box">
-		<li class="slider-cur">
-			<div style="background-image: url(https://pay.360.cn/resource/img/index/pic03.jpg?v=8fe5b.jpg);"></div>
-		</li>
-		<li>
-			<div style="background-image: url(https://pay.360.cn/resource/img/index/pic04.jpg?v=b850d.jpg);"></div>
-		</li>
-	</ul>
-</div>
-<form action="/">
-	<input type="text" class="calendar" data-validate="calendar"/>
-	<input type="text" class="username" data-validate="username"/>
-	<a href="#" class="validate-btn">click</a>
-</form>
-
-<script src="https://pay.360.cn/resource/js/lib/171.js"></script>
-<script src="../lib/nt.js"></script>
-<script src="../dist/ui.js"></script>
-<script>
-	aw.ui.slider.init('.layout-silder');
-    $('.dialog').click(function(){
-        var dialog = aw.ui.dialog.init({
-            title: '标题',
-            message: '内容内容内容内容内容内容内容内容内容内容内容内容内容',
-	        close: function(){
-		        console.log('123132');
-	        }
-        });
-
-        dialog.closeable().overlay().show();
-
-        return false;
-    });
-
-    $('.confirm').click(function(){
-        var confirm = aw.ui.confirm.init({
-            title: 'Confirm',
-            message: '123'
-        });
-
-        confirm.closeable().show(function(ok){
-            if(ok){
-                alert('confrim');
-            }
-        });
-    });
-
-	aw.ui.select.init('select');
-
-	aw.ui.calendar.init('.calendar')
-
-	aw.ui.validate.init('.validate-btn', {
-		rules: {
-			calendar: {
-				required: true
-			},
-			username: {
-				remote: {
-					url: '/'
-				}
-			}
-		}
-	});
-
-
-</script>
+<ol>
+	<li><a href="slider.html">slider</a></li>
+	<li><a href="dialog.html">dialog</a></li>
+	<li><a href="calendar.html">calendar</a></li>
+	<li><a href="select.html">select</a></li>
+	<li><a href="validate.html">validate</a></li>
+	<li><a href="tabs.html">tabs</a></li>
+</ol>
 </body>
 </html>

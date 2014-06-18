@@ -45,6 +45,7 @@ var components = [
 	//ui
 	'emitter',
 	'ajax',
+	'tabs',
 	'dialog',
 	'overlay',
 	'confirm',

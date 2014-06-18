@@ -2,18 +2,18 @@
     position: relative
 }
 .ui-slider-box,
-.ui-slider-box .slider{
+.ui-slider-box .ui-tabs-cont{
     overflow: hidden;
     width: 100%
 }
 
-.ui-slider-box .slider{
+.ui-slider-box .ui-tabs-cont{
     position: absolute;
     top: 0;
     left: 0;
     z-index: 11;
 }
-.ui-slider-box .slider-cur{
+.ui-slider-box .ui-tabs-cont-active{
     z-index: 12
 }
 /* btn
