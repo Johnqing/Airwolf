@@ -664,6 +664,7 @@ var defaultConf = {
 	cls: 'active',
 	eventType: 'click',
 	autoPlay: false,
+	animate: false,
 	handoff: aw.noop
 }
 /**
@@ -758,6 +759,10 @@ var Tabs = aw.ui.Tabs = aw.Class.create({
 		if(!self.box) return;
 		var box = self.box.eq(n);
 		box.addClass('ui-tabs-cont-'+config.cls).siblings(config.box).removeClass('ui-tabs-cont-'+config.cls);
+		if(!config.animate){
+			box.show().siblings(config.box).hide();
+			return;
+		}
 		box.stop(true, true).fadeIn(500).siblings(config.box).fadeOut(500);
 
 	},
@@ -1643,6 +1648,7 @@ var defaultConf = {
 	menu: 'a',
 	child: 'li',
 	autoPlay: true,
+	animate: true,
 	//此处为秒
 	time: 5,
 	defter: 0,
