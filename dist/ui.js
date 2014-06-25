@@ -664,7 +664,7 @@ var defaultConf = {
 	cls: 'active',
 	eventType: 'click',
 	autoPlay: false,
-	after: aw.noop
+	handoff: aw.noop
 }
 /**
  * Tabs Class
@@ -683,6 +683,8 @@ var Tabs = aw.ui.Tabs = aw.Class.create({
 		this.currIndex = 0;
 		this.time = config.time * 1000;
 		this.defer = config.defter * 1000;
+		// 切换时的回调
+		this.on('handoff', config.handoff);
 	},
 	start: function(){
 		var self = this;
@@ -711,6 +713,7 @@ var Tabs = aw.ui.Tabs = aw.Class.create({
 			clearInterval(self.defterTimer);
 			self.defterTimer = setTimeout(function(){
 				self.toASpecificPage.call(self, n);
+				if(!config.autoPlay) return;
 				// 动画切换
 				clearInterval(self.timer);
 				self.timer = setInterval(function(){
@@ -730,6 +733,7 @@ var Tabs = aw.ui.Tabs = aw.Class.create({
 	},
 	toASpecificPage: function(index){
 		var self = this;
+		self.emit('handoff', index);
 		self.currIndex = index;
 		self.changePage();
 		self.setStyle(true);
@@ -741,6 +745,7 @@ var Tabs = aw.ui.Tabs = aw.Class.create({
 		var self = this;
 		var config = self.config;
 		self.menu.eq(self.currIndex).addClass(config.cls);
+		if(!self.box) return;
 		self.box.addClass('ui-tabs-cont');
 	},
 	changePage: function(){
@@ -748,11 +753,13 @@ var Tabs = aw.ui.Tabs = aw.Class.create({
 		var config = self.config;
 		var n = self.currIndex;
 
+		self.menu.removeClass(config.cls).eq(n).addClass(config.cls);
+
+		if(!self.box) return;
 		var box = self.box.eq(n);
 		box.addClass('ui-tabs-cont-'+config.cls).siblings(config.box).removeClass('ui-tabs-cont-'+config.cls);
-		box.stop(true).fadeIn(500).siblings(config.box).fadeOut(500);
+		box.stop(true, true).fadeIn(500).siblings(config.box).fadeOut(500);
 
-		self.menu.removeClass(config.cls).eq(n).addClass(config.cls);;
 	},
 	setTime: function(){
 		var self = this;
@@ -2209,6 +2216,9 @@ var Marquee = aw.Class.create({
 	},
 	start: function(){
 		var self = this;
+		// 防止没有内容时，报错
+		if(self.total<0) return;
+
 		self.show();
 	},
 	show: function(){
@@ -2268,7 +2278,6 @@ var Marquee = aw.Class.create({
 		if(self.total>0){
 			setTimeout(function (){
 				if(paused ) return;
-
 				el.animate({
 					top: (config.scroll == 'top' ? '+' : '-') + self.el.innerHeight() + "px"
 				}, config.defter, config.effectScroll);

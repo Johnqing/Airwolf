@@ -10,10 +10,10 @@
 		li{
 			list-style: none;
 		}
-		.tabs span{
+		.tabs span,.tabs2 span{
 			background: #ddd;
 		}
-		.tabs .active{
+		.tabs .active,.tabs2 .active{
 			background: #f00;
 		}
 		.tabs-cont-box{
@@ -46,6 +46,13 @@
 	</div>
 </div>
 
+
+<div class="tabs2">
+	<span>aaaaa</span>
+	<span>bbbbbbbb</span>
+</div>
+<hr/>
+
 <script src="https://pay.360.cn/resource/js/lib/171.js"></script>
 <script src="../lib/nt.js"></script>
 <script src="../dist/ui.js"></script>
@@ -53,7 +60,15 @@
 	aw.ui.tabs.init('.tabs', {
 		menu: 'span',
 		box: '.tabs-cont',
-		autoPlay: true
+		handoff: function(index){
+			console.log(index);
+		}
+	});
+	aw.ui.tabs.init('.tabs2', {
+		menu: 'span',
+		handoff: function(index){
+			console.log(index);
+		}
 	});
 </script>
 </body>
