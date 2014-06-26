@@ -53,7 +53,6 @@ var components = [
 	'calendar',
 	'slider',
 	'validate',
-	'validate_method',
 	'marquee'
 ];
 

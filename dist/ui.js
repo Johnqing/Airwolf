@@ -972,6 +972,7 @@ aw.ui.dialog = {
 	 * @param config
 	 */
 	error: function(error, config){
+		config = config || {};
 		var title = config.title || '操作失败';
 		var errStr = '<div class="validator-error '+(config.cls || '')+'">' +
 			'<h3 class="tips-tips">' +
@@ -990,7 +991,7 @@ aw.ui.dialog = {
 	 * 锁定
 	 */
 	lock: function(){
-		if(pageConfig.source != 1) {
+		if(pageConfig.rcStatus != 1) {
 			location.href = '/error/depositExp?type=lock';
 			return
 		}
@@ -1003,10 +1004,12 @@ aw.ui.dialog = {
 			cls: 'lock',
 			close: function(){
 				if(pageConfig.source != 1){
-					aw.login.exitLogin();
+					QHPass.logout(aw.login.active);
 					return;
 				}
-				aw.login.exitBack('/index');
+				QHPass.logout(function(){
+					location.href = '/index'
+				});
 			}
 		});
 		dialog.closeable().overlay().show();
@@ -1707,13 +1710,15 @@ aw.ui.slider = {
 }
 })(aw, "<div class=\"ui-slider-btn-box\"></div>");
 ;(function(aw, html){
-var message = {};
+var MESSAGES = {};
 var method = {};
 var defaultConfig = {
 	ignore: 'data-validate-ignore',
 	// 表单容器
 	box: 'form',
 	errorWrap: html,
+	// 错误样式写入节点，并且会把错误信息，append到该节点
+	errorParent: null,
 	// 单项验证时的事件绑定
 	eventType: 'blur',
 	// 尽在点击submit时，验证
@@ -1724,6 +1729,8 @@ var defaultConfig = {
 	focusCls: null,
 	successCls: 'ui-validate-success',
 	errorCls: 'ui-validate-error',
+	// 手动触发提交
+	handle: null,
 	// 回调
 	beforeCheck: null,
 	checkMoreAll: null,
@@ -1732,7 +1739,7 @@ var defaultConfig = {
 	/**
 	 * ajax 提交时的具体传值，可以覆盖
 	 */
-	submitAjax: function(){
+	submitAjax: function(st, fn){
 		var self = this,
 			config = self.config,
 			box = self.box;
@@ -1745,13 +1752,22 @@ var defaultConfig = {
 			type: box.attr("method"),
 			data: aw.util.form.serialize(nodeChilds, config.prefix),
 			success: function(data){
-				config.success(data);
+				config.success && config.success(data);
 			},
 			error: function(data){
-				config.error(data);
+				config.error && config.error(data);
+			},
+			done: function(){
+				fn && fn();
 			}
 		}
-		aw.ajax.json(conf)
+
+		if(!config.handle){
+			aw.ajax.json(conf);
+			return;
+		}
+		config.handle.call(self, conf);
+
 	}
 }
 /**
@@ -1763,6 +1779,8 @@ var Validate = aw.Class.create({
 		var self = this;
 		self.el = el;
 		config = self.config = aw.extend(defaultConfig, config);
+
+		MESSAGES = aw.extend(MESSAGES, config.messages);
 
 		var box = el.parents(config.box);
 		box = box.length ? box : el.parents('form');
@@ -1838,7 +1856,7 @@ var Validate = aw.Class.create({
 			self.check(key, null);
 		}
 
-		self.valid();
+		return self.valid();
 	},
 	check: function(key, isSkipNull){
 		var self = this;
@@ -1848,9 +1866,12 @@ var Validate = aw.Class.create({
 		var rules = config.rules[key];
 		var result;
 
+		if(!item.length){
+			return true;
+		}
+
 		// 如果是非必填项，而且value是空 直接返回真并且删除log
 		if(!rules['required'] && value == '') {
-			self.hideLogs(item);
 			return true;
 		}
 
@@ -1864,7 +1885,7 @@ var Validate = aw.Class.create({
 			var rule = {
 				key: key,
 				method: method[mt],
-				message: message[key] ? message[key][mt] : key + ' is not required!',
+				message: MESSAGES[key] ? MESSAGES[key][mt] : key + ' is not required!',
 				parameters: rules[mt]
 			};
 
@@ -1875,6 +1896,7 @@ var Validate = aw.Class.create({
 			result = rule.method.call(self, value, item, rule);
 			// 异步等待
 			if (result === "pending") {
+				self.pause(key);
 				return;
 			}
 			// error
@@ -1886,7 +1908,6 @@ var Validate = aw.Class.create({
 			// success
 			self.successList.push(key);
 			self.showSuccess();
-			return true;
 		}
 	},
 	// 格式化错误
@@ -1912,28 +1933,40 @@ var Validate = aw.Class.create({
 		var el = self.el;
 		var box = self.box;
 
+		function benPending(){
+			el.addClass('ui-btn-loading ui-btn-disabled');
+		}
+
+		function stopPending(){
+			el.removeClass('ui-btn-loading ui-btn-disabled');
+		}
+
 		if(!config.submitAjax){
 			el.on('click', function(){
 				if(config.beforeCheck && config.beforeCheck()){
 					return false;
 				}
-				box.trigger('submit');
-				return false;
-			});
-			box.on('submit', function(){
 
 				if(self.pendingRequest){
 					self.formSubmitted = true;
 					return false;
 				}
-
+				// 验证所有
 				var st = self.checkAll();
-				return st;
+				if(!st) return false;
+				// 验证成功后 提交
+				if(!config.handle){
+					box.submit();
+					return false
+				}
+				config.handle.call(self, box);
+				return false;
 			});
 			return;
 		}
 
 		el.on('click', function(){
+			benPending();
 			if((config.beforeCheck && config.beforeCheck()) || self.continuous)
 				return false
 
@@ -1951,7 +1984,11 @@ var Validate = aw.Class.create({
 
 			if(st){
 				config.transitBefore && config.transitBefore.call(self);
-				config.submitAjax && config.submitAjax.call(self, st);
+				config.submitAjax && config.submitAjax.call(self, st, function(){
+					stopPending();
+				});
+			} else {
+				stopPending();
 			}
 			return false;
 
@@ -1999,9 +2036,9 @@ var Validate = aw.Class.create({
 		var _nodes = self.nodes_cache;
 
 		for(var key in rules){
-			var item = _nodes[key];
-			if(!_nodes[key]){
-				item = _nodes[key] = box.find('[data-validate='+key+']');
+			var item = box.find('[data-validate='+key+']');
+			if(!_nodes[key] && item.length){
+				_nodes[key] = item;
 			}
 
 			if(item.length){
@@ -2011,55 +2048,48 @@ var Validate = aw.Class.create({
 		}
 
 	},
-	hideLogs: function(item){
+	/**
+	 * 日志
+	 * @param list
+	 * @param type
+	 */
+	logs: function(list, type){
 		var self = this;
 		var config = self.config;
-		item.text('');
-		item.parent().removeClass(config.successCls + ' ' +config.errorCls + ' '+config.focusCls);
-	},
-	showFocus: function(key){
-		var self = this;
-		var config = self.config;
-		var item = self.nodes_cache[key];
-		item.text(message[key]['focus'] || '');
-		item.parent().removeClass(config.successCls + ' ' +config.errorCls).addClass(config.focusCls);
-	},
-	showSuccess: function(){
-		var self = this;
-		var config = self.config;
-
-		var list = self.successList;
-		var len = list.length-1;
-
-		for(var i=len; i>=0; i--){
-			var key = list[i];
-			var item = self.nodes_cache[key];
-			item.text('');
-			item.parent().removeClass(config.errorCls + ' ' +config.focusCls).addClass(config.successCls);
-		}
-
-	},
-	showError: function(){
-		var self = this;
-		var config = self.config;
-		var errorWrap = $(config.errorWrap);
-		var nodename = errorWrap[0].nodeName;
-		var list = self.errorList;
 		var len = list.length-1;
 
 		for(var i=len; i>=0; i--){
 			var rule = list[i];
-			var item = self.nodes_cache[rule.key];
-			var node = item.siblings(nodename);
-			if(!node.length){
-				node = $(config.errorWrap);
-				item.after(node);
+			var key = rule.key || rule;
+			// 取到当前缓存的节点
+			var item = self.nodes_cache[key];
+			var itemParent = config.errorParent ? item.parents(config.errorParent) : item.parent();
+			// 获取日志写入节点
+			var errMessage = itemParent.find('[data-validate=message]');
+			if(!errMessage.length){
+				errMessage = $(config.errorWrap);
+				errMessage.attr('data-validate', 'message');
+				itemParent.append(errMessage);
 			}
-			node.text(self.errorMap[rule.key]);
-			item.parent().removeClass(config.successCls + ' ' +config.focusCls).addClass(config.errorCls);
+			var message = type == 'error' ? (self.errorMap[key] || rule.message) : MESSAGES[key][type];
+			errMessage.text(message || '');
+			itemParent.removeClass(config.successCls + ' ' +config.focusCls + ' '+config.errorCls).addClass(config[type+'Cls']);
 		}
 
-
+	},
+	pause: function(key){
+		this.logs([key], 'pause');
+	},
+	showFocus: function(key){
+		this.logs([key], 'focus');
+	},
+	showSuccess: function(){
+		var self = this;
+		self.logs(self.successList, 'success');
+	},
+	showError: function(errList){
+		var self = this;
+		self.logs(errList ? [errList] : self.errorList, 'error');
 	}
 
 }, aw.ui.Emitter);
@@ -2084,14 +2114,13 @@ aw.ui.validate = {
 			return;
 		method[name] = fn;
 		if(!text) return;
-		message[name] = text;
+		MESSAGES[name] = text;
 	},
-	message: message
+	message: MESSAGES
 }
 
+// 添加方法
 
-})(aw, "<cite class=\"ui-validate-message\"></cite>");
-;(function(aw){
 var setMethod = aw.ui.validate.setMethod;
 var fm = aw.util.form;
 /**
@@ -2148,8 +2177,7 @@ setMethod('remote', function(value, el, rule){
 			previous.valid = true;
 		},
 		error: function(){
-			var error = message[rule.key]['remote'];
-			self.showErrors(error);
+			self.showError(rule);
 			previous.valid = false;
 		},
 		done: function(valid){
@@ -2193,7 +2221,9 @@ setMethod('range', function(value, el, rule){
 	return value >= param[0] && value <= param[1];
 });
 
-})(aw);
+
+
+})(aw, "<cite class=\"ui-validate-message\"></cite>");
 ;(function(aw){
 var defaultConf = {
 	childs: 'li',
