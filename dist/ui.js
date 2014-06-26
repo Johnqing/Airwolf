@@ -583,6 +583,7 @@ aw.ui.Emitter = Emitter;
 aw.ajax = {
 	json: function(config){
 		config = config || {};
+		config.data = config.data || {};
 		// 同步异步
 		if(aw.type(config.async) == 'undefined')
 			config.async = true;
@@ -594,8 +595,9 @@ aw.ajax = {
 		// qid添加
 		if(typeof config.data == 'string'){
 			config.data = aw.query2obj(config.data);
-			config.data.qid = aw.config.qid;
 		}
+
+		config.data.qid = aw.config.qid || null;
 
 		$.ajax({
 			type: config.type || 'get',
@@ -2155,13 +2157,19 @@ setMethod('remote', function(value, el, rule){
 
 	self.startRequest(rule.key);
 
-	var data = {};
+	var data = param.data;
 
-	if(param.data){
-		for(var key in param.data){
-			var item = param.data[key];
-			data[key] = typeof item == 'function' ? item() : item;
-		}
+	// 可以通过data传入一个函数
+	// data: function(el, value){
+	//      return {
+	//          a: 123,
+	//          b: 456,
+	//          c: el.attr('name'),
+	//			d: value
+	//      }
+	// }
+	if(typeof data == 'function'){
+		data = data(el, value);
 	}
 
 	aw.ajax.json({
