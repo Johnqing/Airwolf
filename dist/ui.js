@@ -469,6 +469,12 @@ aw.util.form = {
 })(aw);
 ;(function(aw){
 aw.util.string = {
+	/**
+	 * 格式化字符串
+	 * @param source
+	 * @param params
+	 * @returns {*}
+	 */
 	format: function(source, params){
 		var self = this;
 		if(arguments.length === 1){
@@ -494,6 +500,22 @@ aw.util.string = {
 		});
 		return source;
 
+	},
+	/**
+	 * 获取字符串字节数
+	 * @param value
+	 * @returns {Number|number}
+	 */
+	getByte: function(value){
+		var len = value.length;
+		var byte = len;
+		for(var i=0; i<len; i++){
+			var item = value[i];
+			if(value.charCodeAt(item) > 277){
+				byte++;
+			}
+		}
+		return byte;
 	}
 }
 })(aw);
@@ -1736,6 +1758,7 @@ var defaultConfig = {
 	// 回调
 	beforeCheck: null,
 	checkMoreAll: null,
+	// 验证成功，提交之前执行
 	transitBefore: null,
 	checkSingle: null,
 	/**
@@ -1956,6 +1979,7 @@ var Validate = aw.Class.create({
 				// 验证所有
 				var st = self.checkAll();
 				if(!st) return false;
+				config.transitBefore && config.transitBefore.call(self);
 				// 验证成功后 提交
 				if(!config.handle){
 					box.submit();

@@ -44,7 +44,7 @@ var components = [
 	'string',
 	//ui
 	'emitter',
-	'ajax',
+//	'ajax',
 	'tabs',
 	'dialog',
 	'overlay',
