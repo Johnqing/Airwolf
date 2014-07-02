@@ -1219,10 +1219,10 @@ var Select = aw.Class.create({
 	},
 	_option: function(els, selector, box){
 		return els.each(function(){
-			$(">a", this).click(function(){
+			$(">span", this).click(function(){
 				var $this = $(this);
-				$this.parent().parent().find(".selected").removeClass("selected");
-				$this.addClass("selected");
+				$this.parents('ul').find(".selected").removeClass("selected");
+				$this.parents('li').addClass("selected");
 				selector.text($this.text());
 
 				var $input = $("select", box);
@@ -1240,13 +1240,13 @@ aw.ui.select = {
 		if(!els.length) return;
 
 		config = aw.extend({
-			html: '<li><a class="{{selected}}" href="#" value="{{value}}">{{message}}</a></li>'
+			html: '<li class="{{selected}}"><span value="{{value}}">{{message}}</span></li>'
 		},config)
 
 		return new Select(els, config);
 	}
 }
-})(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:\"></a>\r\n\t</div>\r\n</div>\r\n<ul class=\"ui-select-options\"></ul>");
+})(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:;\"></a>\r\n\t</div>\r\n</div>\r\n<ul class=\"ui-select-options\"></ul>");
 ;(function(aw, html){
 function getPos(el){
 	var p = el.offset(),

@@ -41,21 +41,20 @@
 
 	background: #fff;
 }
-.ui-select-options a {
+.ui-select-options span {
 	padding: 0 5px;
 
-	width: 50px;
 	height: 21px;
 
 	line-height: 21px;
 	text-align: left;
 	color: #000;
 
+	cursor: pointer;
+
 	background: none;
 }
-.ui-select-options a:hover {
-	background: #e0e0e0;
-}
+
 .ui-select-options .selected {
 	background: #e0e0e0;
 }
