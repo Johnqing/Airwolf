@@ -602,81 +602,6 @@ aw.ui.Emitter = Emitter;
 
 })(aw);
 ;(function(aw){
-aw.ajax = {
-	json: function(config){
-		config = config || {};
-		config.data = config.data || {};
-		// 同步异步
-		if(aw.type(config.async) == 'undefined')
-			config.async = true;
-
-		// 未定义url 直接报错
-		if(!config.url)
-			throw new Error('请求地址未定义!');
-
-		// qid添加
-		if(typeof config.data == 'string'){
-			config.data = aw.query2obj(config.data);
-		}
-
-		config.data.qid = aw.config.qid || null;
-
-		$.ajax({
-			type: config.type || 'get',
-			url: config.url,
-			data: config.data,
-			async: config.async,
-			dataType: "json",
-			error: function(data){
-				aw.ajax.netBad(data, config);
-				config.done && config.done(false);
-			},
-			/**
-			 * data必须包含：
-			 *
-			 * errno: 0000 => success other => error
-			 *
-			 * @param data
-			 */
-			success: function(data){
-				data.result_code && (data.errno = data.result_code);
-				data.result_msg && (data.error = data.result_msg);
-				if(data.errno === '0000'){
-					config.success && config.success(data);
-					config.done && config.done(true);
-					return;
-				}
-				aw.ajax.error(data, config);
-				config.done && config.done(false);
-			}
-		});
-	},
-	error: function(data, config){
-		if(!config.isNotCheckLogin){
-			// 1007: 超时
-			// 1008: 未登录
-			if(data.errno == '1007' || data.errno == '1008')
-				return aw.login.exitLogin();
-		}
-		// 2005 => lock
-		if(data.errno == '2005'){
-			aw.ui.dialog.lock();
-			return
-		}
-
-		config.error && config.error(data);
-
-		if(config.isNotPop) return;
-
-		aw.ui.dialog.error(data.error);
-
-	},
-	netBad: function(data, config){
-		config.netBad && config.netBad(data)
-	}
-}
-})(aw);
-;(function(aw){
 
 var defaultConf = {
 	menu: 'li',
@@ -827,7 +752,8 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 	// init new Dialog
 	init: function(config){
 		config = aw.extend(defaultConfig, config);
-		this.on('close', config.close);
+		this.onclose = config.close;
+		this.time = config.time || 0;
 		this.template = html;
 		this.el_p = $(this.template);
 		this.el = this.el_p.find('.content');
@@ -841,19 +767,28 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 	render: function(config){
 		var el = this.el;
 		var title = config.title;
+		var subTitle = config.subTitle;
 		var msg = config.message;
 		var self = this;
 
-
 		el.find('.close').on('click', function(){
-			self.emit('close');
-
-			self.hide();
+			self.hide(self.time * 1000);
 			return false;
 		});
+
+		//add class
+
+		el.addClass(config.cls);
+
 		// title
 		el.find('h1').text(title);
 		if(!title) el.find('h1').remove();
+		// subtitle
+		el.find('h2').text(subTitle);
+		if(!subTitle){
+			el.find('h2').remove();
+		}
+
 
 		// msg
 		if ('string' == typeof msg) {
@@ -978,9 +913,8 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 	 */
 	remove: function(){
 		this.emit('hide');
-
+		this.onclose.call(this);
 		this.el_p.remove();
-
 		return this;
 
 	}
@@ -989,58 +923,9 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 aw.ui.dialog = {
 	init: function(config){
 		return new Dialog(config);
-	},
-	/**
-	 * 报错
-	 * @param error
-	 * @param config
-	 */
-	error: function(error, config){
-		config = config || {};
-		var title = config.title || '操作失败';
-		var errStr = '<div class="validator-error '+(config.cls || '')+'">' +
-			'<h3 class="tips-tips">' +
-			'<s class="icons-terr"></s>'+title+'</h3>' +
-			'<p>'+error+'</p>' +
-			'</div>'
-		var dialog = aw.ui.dialog.init({
-			title: '温馨提示',
-			message: {
-				el: $(errStr)
-			}
-		});
-		dialog.closeable().overlay().show();
-	},
-	/**
-	 * 锁定
-	 */
-	lock: function(){
-		if(pageConfig.rcStatus != 1) {
-			location.href = '/error/depositExp?type=lock';
-			return
-		}
-		if(pageConfig.pageType == 'error') return
-
-		var error = '您的账户存在安全风险，暂时无法进行相关操作。<br>如有疑问请联系客服：<a href="mailto:payhelp@360.cn">payhelp@360.cn。</a>';
-
-		var dialog = aw.ui.dialog.error(error, {
-			title: '账户存在安全风险',
-			cls: 'lock',
-			close: function(){
-				if(pageConfig.source != 1){
-					QHPass.logout(aw.login.active);
-					return;
-				}
-				QHPass.logout(function(){
-					location.href = '/index'
-				});
-			}
-		});
-		dialog.closeable().overlay().show();
 	}
-
 }
-})(aw, "<div class=\"ui-dialog-box\">\r\n\t<div class=\"content\">\r\n\t\t<h1>Title</h1>\r\n\t\t<a href=\"#\" class=\"close\">×</a>\r\n\t\t<p>Message</p>\r\n\t</div>\r\n</div>");
+})(aw, "<div class=\"ui-dialog-box\">\r\n\t<div class=\"content\">\r\n\t\t<div class=\"title\">\r\n\t\t\t<h1>Title</h1>\r\n\t\t\t<h2>subtitle</h2>\r\n\t\t\t<span class=\"close-box\">\r\n\t\t\t\t<a href=\"#\" class=\"close\">×</a>\r\n\t\t\t</span>\r\n\t\t</div>\r\n\t\t<p>Message</p>\r\n\t</div>\r\n</div>");
 ;(function(aw, html){
 
 var Overlay = aw.Class.create({
@@ -1251,6 +1136,7 @@ var Select = aw.Class.create({
 
 			var divNode = select.find('div');
 			divNode.attr('data-select-box', cid);
+			divNode.addClass(self.config.cls || '');
 			if(ref){
 				divNode.attr('data-select-ref', ref);
 			}
@@ -1265,6 +1151,8 @@ var Select = aw.Class.create({
 			//options
 			var options = template.eq(2);
 			options.attr('data-select-pop', cid);
+			var cls = self.config.cls ? self.config.cls +'-options' : '';
+			options.addClass(cls);
 			var ops = ''
 			$("option", $this).each(function(){
 				var option = $(this);
@@ -2098,7 +1986,7 @@ var Validate = aw.Class.create({
 				itemParent.append(errMessage);
 			}
 			var message = type == 'error' ? (self.errorMap[key] || rule.message) : MESSAGES[key][type];
-			errMessage.text(message || '');
+			errMessage.text(message || '\n');
 			itemParent.removeClass(config.successCls + ' ' +config.focusCls + ' '+config.errorCls).addClass(config[type+'Cls']);
 		}
 
@@ -2239,7 +2127,7 @@ setMethod('required', function(value, el){
 setMethod('equalTo', function(value, el, rule){
 	var self = this;
 	var target = self.nodes_cache[rule.parameters];
-
+	if(!target) return true;
 	return value === aw.util.form.elValue(target);
 });
 /**
@@ -2250,7 +2138,8 @@ setMethod('equalTo', function(value, el, rule){
  */
 setMethod('range', function(value, el, rule){
 	var param = rule.parameters;
-	return value >= param[0] && value <= param[1];
+	var len = value.length
+	return len >= param[0] && len <= param[1];
 });
 
 

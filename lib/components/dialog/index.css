@@ -1,5 +1,5 @@
 .ui-dialog-box {
-	position: fixed;
+	position: absolute;
 	left: 50%;
 	top: 150px;
 	max-width: 600px;
@@ -30,11 +30,12 @@
 }
 
 /* close */
-
-.ui-dialog-box .close {
+.ui-dialog-box .close-box{
 	position: absolute;
 	top: 3px;
 	right: 10px;
+}
+.ui-dialog-box .close {
 	text-decoration: none;
 	color: #888;
 	font-size: 16px;
