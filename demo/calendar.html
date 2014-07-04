@@ -22,7 +22,14 @@
 <script src="../dist/ui.js"></script>
 <script>
 
-	aw.ui.calendar.init('.calendar')
+	aw.ui.calendar.init('.calendar', {
+		close: function(){
+			console.log('close');
+		},
+		select: function(value){
+			console.log(value);
+		}
+	})
 
 
 </script>

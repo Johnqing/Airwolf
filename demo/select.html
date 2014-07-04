@@ -28,7 +28,11 @@
 <script src="../dist/ui.js"></script>
 <script>
 
-	aw.ui.select.init('select');
+	aw.ui.select.init('select', {
+		select: function(txt){
+			console.log(txt);
+		}
+	});
 
 </script>
 </body>

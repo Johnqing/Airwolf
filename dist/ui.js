@@ -353,10 +353,10 @@ function setDate(year, month, _date){
 	var date = new Date();
 	if(year){
 		var time = year;
-		if(arguments.length == 1 && aw.type(time) == 'year'){
+		if(arguments.length == 1 && aw.type(time) == 'string'){
 			time = year.split(/[^\d]/g);
 		}
-		if(aw.type(year) == 'array'){
+		if(aw.type(time) == 'array'){
 			year = time[0];
 			month = time[1] || 1;
 			_date = time[2] || 0
@@ -868,11 +868,16 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 		this.el_p.appendTo('body');
 
 		this.el_p.css({
+			top: this.getTopPostion(this.el_p),
 			marginLeft: -(this.el_p.width() / 2) + 'px'
 		});
 
 		this.emit('show');
 		return this;
+	},
+	getTopPostion: function(node){
+		var winPostion = $(window).height() - node.height();
+		return (winPostion/2) + $(document).scrollTop();
 	},
 	/**
 	 * 隐藏modal
@@ -1101,6 +1106,8 @@ var Select = aw.Class.create({
 		this.el = el;
 		this.config = config;
 		this.render();
+
+		this.on('select', config.select);
 	},
 	clear: function(){
 		var _box = [];
@@ -1218,17 +1225,21 @@ var Select = aw.Class.create({
 		});
 	},
 	_option: function(els, selector, box){
+		var self = this;
 		return els.each(function(){
 			$(">span", this).click(function(){
 				var $this = $(this);
 				$this.parents('ul').find(".selected").removeClass("selected");
 				$this.parents('li').addClass("selected");
-				selector.text($this.text());
-
+				var txt = $this.text();
+				selector.text(txt);
+				// 更新select的值
 				var $input = $("select", box);
 				if ($input.val() != $this.attr("value")) {
 					$("select", box).val($this.attr("value")).trigger("change");
 				}
+				//事件绑定
+				self.emit('select', txt);
 			});
 		});
 	}
@@ -1240,8 +1251,9 @@ aw.ui.select = {
 		if(!els.length) return;
 
 		config = aw.extend({
-			html: '<li class="{{selected}}"><span value="{{value}}">{{message}}</span></li>'
-		},config)
+			html: '<li class="{{selected}}"><span value="{{value}}">{{message}}</span></li>',
+			select: aw.noop
+		}, config)
 
 		return new Select(els, config);
 	}
@@ -1273,11 +1285,11 @@ var defaultConf = {
 		min: 1980
 	},
 	// 选中回调
-	select: null,
+	select: aw.noop,
 	// 打开回调
-	open: null,
+	open: aw.noop,
 	// 关闭回调
-	close: null
+	close: aw.noop
 }
 
 var Calendar = aw.Class.create({
@@ -1314,10 +1326,12 @@ var Calendar = aw.Class.create({
 				return;
 			var value = el.attr('data-calendar-day');
 			self.el.val(value);
+			self.emit('select', value);
 			closeCalendar();
 		});
 
 		function closeCalendar(){
+			self.emit('close');
 			self.node.off('click');
 			self.node.remove();
 			$(document).off('click', closeCalendar);
@@ -1353,7 +1367,7 @@ var Calendar = aw.Class.create({
 	},
 	render: function(){
 		var self = this;
-
+		self.emit('open');
 		self.groupQuery();
 
 		var template = NT.tpl(html, self.data);
@@ -1846,11 +1860,17 @@ var Validate = aw.Class.create({
 		var el = self.el;
 		var box = self.box;
 
+		var defaultBtnText = el.text();
+
 		function benPending(){
+			if(config.loadText){
+				el.html('<b></b><em>'+(config.loadText || 'Loading')+'</em>');
+			}
 			el.addClass('ui-btn-loading ui-btn-disabled');
 		}
 
 		function stopPending(){
+			el.text(defaultBtnText);
 			el.removeClass('ui-btn-loading ui-btn-disabled');
 		}
 
