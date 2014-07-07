@@ -1,4 +1,89 @@
 /*
+* overlay
+======================*/
+.ui-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	opacity: 1;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,.75);
+	transition: opacity 300ms;
+	z-index: 500;
+}
+
+.ui-overlay.hide {
+	pointer-events: none;
+	opacity: 0;
+}
+/*
+* select
+======================*/
+.ui-select-box {
+	margin-right: 3px;
+	background-position: 100% -25px;
+}
+.ui-select-box select {
+	display: none
+}
+.ui-select-box .select {
+	float: left;
+}
+.ui-select-box .select a {
+	float: left;
+	display: block;
+	overflow: hidden;
+
+	border: 1px solid #ddd;
+
+	padding: 0 35px 0 5px;
+	height: 32px;
+
+	color: #183152;
+	line-height: 32px;
+	text-decoration: none;
+	font-size: 12px;
+
+	background-position: 100% -50px;
+}
+/* options
+=========================*/
+.ui-select-options {
+	display:none;
+
+	position: absolute;
+	z-index: 1001;
+
+	border-color: #000;
+	border-style: solid;
+	border-width: 1px 2px 2px 1px;
+
+	padding: 4px;
+
+	background: #fff;
+}
+.ui-select-options span {
+	padding: 0 5px;
+
+	height: 21px;
+
+	line-height: 21px;
+	text-align: left;
+	color: #000;
+
+	cursor: pointer;
+
+	background: none;
+}
+
+.ui-select-options .selected {
+	background: #e0e0e0;
+}
+.ui-select-options li {
+	text-align: left;
+}
+/*
 * dialog
 ======================*/
 .ui-dialog-box {
@@ -95,89 +180,42 @@
 	-moz-transform: scale(0);
 }
 /*
-* overlay
+* slider
 ======================*/
-.ui-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	opacity: 1;
-	width: 100%;
-	height: 100%;
-	background: rgba(0,0,0,.75);
-	transition: opacity 300ms;
-	z-index: 500;
+.ui-slider-box{
+    position: relative
+}
+.ui-slider-box,
+.ui-slider-box .ui-tabs-cont{
+    overflow: hidden;
+    width: 100%
 }
 
-.ui-overlay.hide {
-	pointer-events: none;
-	opacity: 0;
+.ui-slider-box .ui-tabs-cont{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 11;
 }
-/*
-* select
-======================*/
-.ui-select-box {
-	margin-right: 3px;
-	background-position: 100% -25px;
+.ui-slider-box .ui-tabs-cont-active{
+    z-index: 12
 }
-.ui-select-box select {
-	display: none
+/* btn
+===================*/
+.ui-slider-btn-box {
+    text-align: center
 }
-.ui-select-box .select {
-	float: left;
+.ui-slider-btn-box a {
+    background: #e0e0e0;
+    display: inline-block;
+    height: 0;
+    margin: 0 5px;
+    overflow: hidden;
+    padding-top: 8px;
+    width: 30px
 }
-.ui-select-box .select a {
-	float: left;
-	display: block;
-	overflow: hidden;
-
-	border: 1px solid #ddd;
-
-	padding: 0 35px 0 5px;
-	height: 32px;
-
-	color: #183152;
-	line-height: 32px;
-	text-decoration: none;
-	font-size: 12px;
-
-	background-position: 100% -50px;
-}
-/* options
-=========================*/
-.ui-select-options {
-	display:none;
-
-	position: absolute;
-	z-index: 1001;
-
-	border-color: #000;
-	border-style: solid;
-	border-width: 1px 2px 2px 1px;
-
-	padding: 4px;
-
-	background: #fff;
-}
-.ui-select-options span {
-	padding: 0 5px;
-
-	height: 21px;
-
-	line-height: 21px;
-	text-align: left;
-	color: #000;
-
-	cursor: pointer;
-
-	background: none;
-}
-
-.ui-select-options .selected {
-	background: #e0e0e0;
-}
-.ui-select-options li {
-	text-align: left;
+.ui-slider-btn-box .active {
+    background: #3eaf0e
 }
 /*
 * calendar
@@ -305,41 +343,3 @@
 	color: #666
 }
 
-/*
-* slider
-======================*/
-.ui-slider-box{
-    position: relative
-}
-.ui-slider-box,
-.ui-slider-box .ui-tabs-cont{
-    overflow: hidden;
-    width: 100%
-}
-
-.ui-slider-box .ui-tabs-cont{
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 11;
-}
-.ui-slider-box .ui-tabs-cont-active{
-    z-index: 12
-}
-/* btn
-===================*/
-.ui-slider-btn-box {
-    text-align: center
-}
-.ui-slider-btn-box a {
-    background: #e0e0e0;
-    display: inline-block;
-    height: 0;
-    margin: 0 5px;
-    overflow: hidden;
-    padding-top: 8px;
-    width: 30px
-}
-.ui-slider-btn-box .active {
-    background: #3eaf0e
-}

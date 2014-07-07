@@ -1663,6 +1663,8 @@ var defaultConfig = {
 	// 验证成功，提交之前执行
 	transitBefore: null,
 	checkSingle: null,
+	// remote可通过该项进行相关的配置
+	remoteCallback: null,
 	/**
 	 * ajax 提交时的具体传值，可以覆盖
 	 */
@@ -2075,7 +2077,9 @@ var fm = aw.util.form;
  * @returns {*}
  */
 setMethod('remote', function(value, el, rule){
-	var self = this;
+	var self = this,
+		config = self.config,
+		fn = config.remoteCallback;
 
 	var previous = self.previousValue(el);
 
@@ -2109,14 +2113,16 @@ setMethod('remote', function(value, el, rule){
 		url: param.url,
 		dataType: "json",
 		data: data,
-		success: function(res){
+		success: function(json){
 			var submitted = self.formSubmitted;
 			self.formSubmitted = submitted;
 			self.successList.push(rule.key);
 			self.showSuccess();
+			fn && fn(json);
 			previous.valid = true;
 		},
-		error: function(){
+		error: function(json){
+			fn && fn(json);
 			self.showError(rule);
 			previous.valid = false;
 		},
