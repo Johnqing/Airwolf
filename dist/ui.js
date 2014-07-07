@@ -792,7 +792,7 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 
 		// msg
 		if ('string' == typeof msg) {
-			el.find('p').text(msg);
+			el.find('p').html(msg);
 		} else if (msg) {
 			el.find('p').replaceWith(msg.el || msg);
 		}
@@ -1834,10 +1834,10 @@ var Validate = aw.Class.create({
 				self.showError();
 				return false;
 			}
-			// success
-			self.successList.push(key);
-			self.showSuccess();
 		}
+		// success
+		self.successList.push(key);
+		self.showSuccess();
 	},
 	// 格式化错误
 	formatAndAdd: function(el, rule){
@@ -2122,6 +2122,9 @@ setMethod('remote', function(value, el, rule){
 			previous.valid = true;
 		},
 		error: function(json){
+			var msg = json.error || rule.message;
+			MESSAGES[rule.key]['remote'] = msg
+			rule.message = msg;
 			fn && fn(json);
 			self.showError(rule);
 			previous.valid = false;
