@@ -778,7 +778,7 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 
 		//add class
 
-		el.addClass(config.cls);
+		this.el_p.addClass(config.cls);
 
 		// title
 		el.find('h1').text(title);
@@ -788,7 +788,6 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 		if(!subTitle){
 			el.find('h2').remove();
 		}
-
 
 		// msg
 		if ('string' == typeof msg) {
