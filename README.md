@@ -66,3 +66,55 @@ className.xxx2 = function(){}
 ```
 aw.Class.instance(className);
 ```
+
+## 事件监听器
+
+aw.ui.Emitter 可通过继承该类来添加监听器的方法
+
+```
+// 使Test类继承Emitter
+var Test = aw.Class.create({
+	init: function(){
+		// 绑定了一个名为abc的方法
+		this.on('abc', function(v){
+			alert(v)
+		});
+	},
+	evt: function(){
+		// 此处的on 是jquery的方法
+		$(xx).on('click', function(){
+			var v = $(this).val();
+			// 激活事件
+			this.emit('abc', v);
+			// 解除事件
+			this.off('abc')
+		});
+	}
+
+}, aw.ui.Emitter);
+```
+
+### 监听
+
+```
+this.on('abc', fn);
+```
+
+### 监听一次
+
+```
+this.once('abc', fn);
+```
+
+### 解除监听
+
+```
+// 如果不传入解除 abc下所有函数
+this.off('abc', fn);
+```
+
+### 激活监听的函数
+
+```
+this.emit('abc', 传递给on绑定方法的参数);
+```
