@@ -1863,14 +1863,14 @@ var Validate = aw.Class.create({
 
 		var defaultBtnText = el.text();
 
-		function benPending(){
+		self.benPending = function(){
 			if(config.loadText){
 				el.html('<b></b><em>'+(config.loadText || 'Loading')+'</em>');
 			}
 			el.addClass('ui-btn-loading ui-btn-disabled');
 		}
 
-		function stopPending(){
+		self.stopPending = function(){
 			el.text(defaultBtnText);
 			el.removeClass('ui-btn-loading ui-btn-disabled');
 		}
@@ -1901,7 +1901,7 @@ var Validate = aw.Class.create({
 		}
 
 		el.on('click', function(){
-			benPending();
+			self.benPending();
 			if((config.beforeCheck && config.beforeCheck()) || self.continuous)
 				return false
 
@@ -1920,10 +1920,10 @@ var Validate = aw.Class.create({
 			if(st){
 				config.transitBefore && config.transitBefore.call(self);
 				config.submitAjax && config.submitAjax.call(self, st, function(){
-					stopPending();
+					self.stopPending();
 				});
 			} else {
-				stopPending();
+				self.stopPending();
 			}
 			return false;
 
