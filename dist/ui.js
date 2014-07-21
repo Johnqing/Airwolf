@@ -1155,7 +1155,7 @@ var Select = aw.Class.create({
 			aNode.text(label);
 
 			//options
-			var options = template.eq(2);
+			var options = $('<ul class="ui-select-options"></ul>');
 			options.attr('data-select-pop', cid);
 			var cls = self.config.cls ? self.config.cls +'-options' : '';
 			options.addClass(cls);
@@ -1257,7 +1257,7 @@ aw.ui.select = {
 		return new Select(els, config);
 	}
 }
-})(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:;\"></a>\r\n\t</div>\r\n</div>\r\n<ul class=\"ui-select-options\"></ul>");
+})(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:;\"></a>\r\n\t</div>\r\n</div>");
 ;(function(aw, html){
 function getPos(el){
 	var p = el.offset(),
@@ -2149,8 +2149,9 @@ setMethod('required', function(value, el){
 	}
 	return $.trim(value).length > 0;
 });
+
 /**
- * 确认xx(例如：确认密码)
+ * 相等
  */
 setMethod('equalTo', function(value, el, rule){
 	var self = this;
@@ -2158,6 +2159,17 @@ setMethod('equalTo', function(value, el, rule){
 	if(!target) return true;
 	return value === aw.util.form.elValue(target);
 });
+
+/**
+ * 不等
+ */
+setMethod('unequal', function(value, el, rule){
+	var self = this;
+	var target = self.nodes_cache[rule.parameters];
+	if(!target) return true;
+	return value !== aw.util.form.elValue(target);
+});
+
 /**
  * 范围:
  *
