@@ -1342,6 +1342,7 @@ var Calendar = aw.Class.create({
 			}
 			var value = ev.target.value;
 			self.setTimes(value);
+			self.valueTime = value;
 			self.render();
 			//
 			$(document).on('click', closeCalendar);
@@ -1422,7 +1423,7 @@ var Calendar = aw.Class.create({
 		var year = self.times.getFullYear(),
 			month = self.times.getMonth(),
 			_date_ = self.times.getDate(),
-			_date = util.setDate(year, month+1, _date_)
+			_date = util.setDate(self.valueTime)
 
 		// 大于范围
 		if(year > maxYear){
@@ -1439,7 +1440,7 @@ var Calendar = aw.Class.create({
 		self.setYM();
 
 		var now = util.setDate();
-		var days = util.getDaysInMonth(year, month + 1);
+		var days = util.getDaysInMonth(year, month);
 		// 获取当前是周几
 		var week = util.setDate(year, month+1, 1).getDay();
 		var r = 0;
