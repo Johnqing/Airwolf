@@ -1032,25 +1032,6 @@ aw.ui.confirm = {
 }
 })(aw, "<div class=\"ui-confirm-box\">\r\n    <button class=\"cancel\">Cancel</button>\r\n    <button class=\"ok\">Ok</button>\r\n</div>");
 ;(function(aw, html){
-var allBox = [];
-
-function killAllBox(id){
-	$.each(allBox, function(i){
-		var item = allBox[i];
-		if(item != id){
-			if(!$('[data-select-box='+item+']').length){
-				$('[data-select-pop='+item+']').remove();
-			}else{
-				$('[data-select-pop='+item+']').css({
-					height: '',
-					width: ''
-				}).hide();
-			}
-			$(document).unbind("click", killAllBox);
-		}
-	});
-}
-
 /**
  * 级联菜单
  * @param event
@@ -1111,136 +1092,141 @@ var Select = aw.Class.create({
 	clear: function(){
 		var _box = [];
 		this.emit('clear');
-
-		$.each(allBox, function(i){
-			var item = allBox[i];
-			if($('[data-select-box='+item+']').length){
-				_box.push(item);
-				return
-			}
-			$('[data-select-pop='+item+']').remove();
-		});
-
+		$('.ui-select-options').hide();
 	},
 	render: function(){
 		this.clear();
 		var self = this;
+		var $this = this.el;
+		var name = $this.attr('name');
+		var val = $this.val();
+		var label = $('option[value='+val+']', $this).text();
+		var ref = $this.attr('data-select-ref');
+		var refUrl = $this.attr('data-select-ref-url') || '';
 
-		return this.el.each(function(){
-			var $this = $(this);
-			var name = $this.attr('name');
-			var val = $this.val();
-			var label = $('option[value='+val+']', $this).text();
-			var ref = $this.attr('data-select-ref');
-			var refUrl = $this.attr('data-select-ref-url') || '';
+		var cid = $this.attr('id') || aw.uniqueId();
 
-			var cid = $this.attr('id') || aw.uniqueId();
+		var template = $(html);
 
-			var template = $(html);
+		var select = template.eq(0);
 
-			var select = template.eq(0);
-
-			var divNode = select.find('div');
-			divNode.attr('data-select-box', cid);
-			divNode.addClass(self.config.cls || '');
-			if(ref){
-				divNode.attr('data-select-ref', ref);
-			}
-			var aNode = select.find('a');
-			aNode.attr({
-				'class': $this.attr('class'),
-				'name': name,
-				'value': val
-			});
-			aNode.text(label);
-
-			//options
-			var options = $('<ul class="ui-select-options"></ul>');
-			options.attr('data-select-pop', cid);
-			var cls = self.config.cls ? self.config.cls +'-options' : '';
-			options.addClass(cls);
-			var ops = ''
-			$("option", $this).each(function(){
-				var option = $(this);
-				var opts = aw.extend({
-					selected: val == option[0].value ? "selected": "",
-					value: option[0].value,
-					message: option[0].text
-				}, option.data());
-				ops += _tpl(self.config.html, opts);
-			});
-			options.html(ops);
-			options.appendTo('body');
-			$this.before(select);
-			self.bindEvent($("div.select", $this.prev())).append($this);
-
-			if(ref && refUrl){
-				$this.unbind("change", _onchange).bind("change", {ref:ref, refUrl:refUrl, $this:$this}, _onchange);
-			}
-
+		var divNode = select.find('div');
+		divNode.attr('data-select-box', cid);
+		divNode.addClass(self.config.cls || '');
+		if(ref){
+			divNode.attr('data-select-ref', ref);
+		}
+		var aNode = select.find('a');
+		aNode.attr({
+			'data-select-box': cid,
+			'class': $this.attr('class'),
+			'name': name,
+			'value': val
 		});
+		aNode.text(label);
+
+		//options
+		var options = self.options = $('<ul class="ui-select-options"></ul>');
+		options.attr('data-select-pop', cid);
+		var cls = self.config.cls ? self.config.cls +'-options' : '';
+		options.addClass(cls);
+		var ops = ''
+		$("option", $this).each(function(){
+			var option = $(this);
+			var opts = aw.extend({
+				selected: val == option[0].value ? "selected": "",
+				value: option[0].value,
+				message: option[0].text
+			}, option.data());
+			ops += _tpl(self.config.html, opts);
+		});
+		options.html(ops);
+		options.appendTo('body');
+		$this.before(select);
+		self.bindEvent($("div.select", $this.prev())).append($this);
+
+		if(ref && refUrl){
+			$this.unbind("change", _onchange).bind("change", {ref:ref, refUrl:refUrl, $this:$this}, _onchange);
+		}
 	},
 	bindEvent: function(els, config){
 		var option = aw.extend({selector: '>a'}, config);
 		var self = this;
 
-		return els.each(function(){
-			var $this = $(this);
-			var selector = $(option.selector, $this);
-			var id = $this.attr('data-select-box');
+		var $this = els;
+		var selector = $(option.selector, $this);
+		var id = self.uuid = $this.attr('data-select-box');
 
-			allBox.push(id);
 
-			selector.click(function(){
-				var options = $('[data-select-pop='+id+']');
-				if(options.is(':hidden')){
-					if(options.height() > 300){
-						options.css({
-							height: 300,
-							overflowX: 'scroll'
-						})
-					}
-
-					var top = $this.offset().top + $this.innerHeight();
-
-					if(top + options.height() > $(window).height - 20){
-						top = $(window).height() - 20 - options.height();
-					}
-
+		selector.click(function(){
+			var options = self.options;
+			if(options.is(':hidden')){
+				if(options.height() > 300){
 					options.css({
-						top: top,
-						left: $this.offset().left
-					}).show();
-
-					killAllBox(id);
-					$(document).click(killAllBox);
-				}else{
-					$(document).unbind("click", killAllBox);
-					killAllBox();
+						height: 300,
+						overflowX: 'scroll'
+					})
 				}
-				return false;
-			});
-			self._option($('[data-select-pop='+id+']').find(">li"), selector, $this);
+
+				var top = $this.offset().top + $this.innerHeight();
+
+				if(top + options.height() > $(window).height - 20){
+					top = $(window).height() - 20 - options.height();
+				}
+
+				options.css({
+					top: top,
+					left: $this.offset().left
+				}).show();
+
+			}
 		});
+		// 点击空白处关闭
+		$(document).on('click', function(ev) {
+			var target;
+			target = ev.srcElement || ev.target;
+			if (!target) {
+				return;
+			}
+			do{
+				if ($(target).attr('data-select-box') == self.uuid){
+					return
+				}
+			}
+			while(target = target.parentNode);
+			// fixed target 冒泡为null的bug
+			// fixed 当前select list 已经是隐藏的状况 也会触发 close
+			if (!target && !self.options.is(':hidden')) {
+				self.close();
+			}
+		});
+		self._option(self.options.find(">li"), selector, $this);
+		return els;
 	},
 	_option: function(els, selector, box){
 		var self = this;
-		return els.each(function(){
-			$(">span", this).click(function(){
-				var $this = $(this);
-				$this.parents('ul').find(".selected").removeClass("selected");
-				$this.parents('li').addClass("selected");
-				var txt = $this.text();
-				selector.text(txt);
-				// 更新select的值
-				var $input = $("select", box);
-				if ($input.val() != $this.attr("value")) {
-					$("select", box).val($this.attr("value")).trigger("change");
-				}
-				//事件绑定
-				self.emit('select', txt);
-			});
+		$(">span", els).click(function(){
+			var $this = $(this);
+			$this.parents('ul').find(".selected").removeClass("selected");
+			$this.parents('li').addClass("selected");
+
+			var text = $this.text();
+			var v = $this.attr("value");
+
+
+			selector.text(text).attr('value', v);
+			// 更新select的值
+			var $input = $("select", box);
+			if ($input.val() != v) {
+				$("select", box).val(v).trigger("change");
+			}
+			//事件绑定
+			self.emit('select', text, v);
 		});
+	},
+	close: function(){
+		this.emit('close');
+		this.options.hide();
 	}
 }, aw.ui.Emitter);
 
@@ -1254,7 +1240,9 @@ aw.ui.select = {
 			select: aw.noop
 		}, config)
 
-		return new Select(els, config);
+		return els.each(function(){
+			new Select($(this), config)
+		});
 	}
 }
 })(aw, "<div class=\"ui-select-box\">\r\n\t<div class=\"select\">\r\n\t\t<a href=\"javascript:;\"></a>\r\n\t</div>\r\n</div>");
@@ -1305,8 +1293,9 @@ var Calendar = aw.Class.create({
 			currMonth: '',
 			now: ''
 		};
-
-		self.setTimes(el.val());
+		var v = $.trim(el.val());
+		v = v ? aw.util.date.parse(v) : aw.util.date.setDate();
+		self.setTimes(v);
 
 		var config = self.config;
 		// 默认打开就渲染
@@ -1328,8 +1317,11 @@ var Calendar = aw.Class.create({
 			self.emit('select', value);
 			closeCalendar();
 		});
-
+		var closeFlag = 0;
 		function closeCalendar(){
+			if(!closeFlag)
+				return closeFlag = 1;
+			closeFlag = 0;
 			self.emit('close');
 			self.node.off('click');
 			self.node.remove();
@@ -1341,12 +1333,10 @@ var Calendar = aw.Class.create({
 				self.node = null;
 			}
 			var value = ev.target.value;
-			self.setTimes(value);
-			self.valueTime = value;
-			self.render();
+			value = value ? aw.util.date.parse(value) : aw.util.date.setDate();
+			self.reRender(value);
 			//
 			$(document).on('click', closeCalendar);
-			return false;
 		});
 		// 回调
 		self.on('select', config.select);
@@ -1354,10 +1344,6 @@ var Calendar = aw.Class.create({
 		self.on('close', config.close);
 	},
 	setTimes: function(value){
-		var util = aw.util.date;
-		value = $.trim(value);
-		value = value ? util.parse(value) : util.setDate();
-
 		var year = value.getFullYear();
 		var month = value.getMonth();
 		var _date = value.getDate();
@@ -1381,11 +1367,6 @@ var Calendar = aw.Class.create({
 		});
 		self.renderBind();
 		node.appendTo('body');
-
-		self.node.on('click', '.day', function(evt){
-			self.emit('chose_date', $(evt.target))
-		});
-
 	},
 	renderBind: function(){
 		var self = this;
@@ -1397,16 +1378,47 @@ var Calendar = aw.Class.create({
 			var n = value.length;
 			var _date = self.times.getDate();
 			var month = n <4 ? value : self.times.getMonth();
-			var year = n < 4 ? self.times.getFullYear() : value;;
-			self.setTimes(year + '-' + month + '-' + _date);
-			self.node.remove();
-			self.render();
-
+			var year = n < 4 ? self.times.getFullYear() : value;
+			var v = aw.util.date.parse([year, month, _date].join('-'));
+			self.reRender(v);
 			return false;
 		});
 		self.node.click(function(event){
 			event.stopPropagation();
 		});
+		// 选择日期
+		self.node.on('click', '.day', function(evt){
+			self.emit('chose_date', $(evt.target))
+		});
+		// 月份翻页
+		self.node.on('click', '[data-calendar-btn=prev]', function(){
+			var _date = self.times;
+			_date.setMonth(_date.getMonth() - 1);
+			self.reRender(_date);
+		});
+		// 月份翻页
+		self.node.on('click', '[data-calendar-btn=next]', function(){
+			var _date = self.times;
+			_date.setMonth(_date.getMonth() + 1);
+			self.reRender(_date);
+		})
+
+	},
+	/**
+	 * 重新渲染
+	 * @param year
+	 * @param month
+	 * @param _date
+	 */
+	reRender: function(_date){
+		if(this.node){
+			this.node.remove();
+			this.node.off();
+			this.node = null;
+		}
+		// 渲染
+		this.setTimes(_date);
+		this.render();
 	},
 	groupQuery: function(){
 		var self = this,
@@ -2146,7 +2158,7 @@ setMethod('required', function(value, el){
 		return !!v;
 	}
 	if (fm.checkable(el)) {
-		return fm.getLength(value, el) > 0;
+		return fm.getLength(el) > 0;
 	}
 	return $.trim(value).length > 0;
 });
