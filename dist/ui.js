@@ -865,9 +865,9 @@ var Dialog = aw.ui.Dialog = aw.Class.create({
 		}
 
 		this.el_p.appendTo('body');
-
+		var top = this.getTopPostion(this.el_p);
 		this.el_p.css({
-			top: this.getTopPostion(this.el_p),
+			top: top<0 ? 0 : top,
 			marginLeft: -(this.el_p.width() / 2) + 'px'
 		});
 
@@ -931,6 +931,10 @@ aw.ui.dialog = {
 }
 })(aw, "<div class=\"ui-dialog-box\">\r\n\t<div class=\"content\">\r\n\t\t<div class=\"title\">\r\n\t\t\t<h1>Title</h1>\r\n\t\t\t<h2>subtitle</h2>\r\n\t\t\t<span class=\"close-box\">\r\n\t\t\t\t<a href=\"#\" class=\"close\">×</a>\r\n\t\t\t</span>\r\n\t\t</div>\r\n\t\t<p>Message</p>\r\n\t</div>\r\n</div>");
 ;(function(aw, html){
+var body = $('body');
+var wh = $(window).height();
+var bdh = body.innerHeight();
+
 
 var Overlay = aw.Class.create({
 	init: function(config){
@@ -941,6 +945,9 @@ var Overlay = aw.Class.create({
 		this.closeable = config.closeable;
 
 		this.el = $(html);
+		this.el.css({
+			height: bdh > wh ? bdh : wh
+		});
 		this.el.appendTo('body');
 
 		if(this.closeable){
@@ -1030,7 +1037,7 @@ aw.ui.confirm = {
 		return new Confirm(config);
 	}
 }
-})(aw, "<div class=\"ui-confirm-box\">\r\n    <button class=\"cancel\">Cancel</button>\r\n    <button class=\"ok\">Ok</button>\r\n</div>");
+})(aw, "<div class=\"ui-confirm-box\">\r\n    <a href=\"javascript:;\" class=\"cancel\">Cancel</a>\r\n    <a href=\"javascript:;\" class=\"ok\">Ok</a>\r\n</div>");
 ;(function(aw, html){
 /**
  * 级联菜单
@@ -1377,7 +1384,7 @@ var Calendar = aw.Class.create({
 			var value = $(this).val();
 			var n = value.length;
 			var _date = self.times.getDate();
-			var month = n <4 ? value : self.times.getMonth();
+			var month = n <4 ? value : self.times.getMonth() + 1;
 			var year = n < 4 ? self.times.getFullYear() : value;
 			var v = aw.util.date.parse([year, month, _date].join('-'));
 			self.reRender(v);
@@ -1662,7 +1669,7 @@ var defaultConfig = {
 	// 尽在点击submit时，验证
 	isOnlySubmitCheck: false,
 	// 单项验证时，不验证空白项
-	isSkipNull: false,
+	isSkipNull: true,
 	// 聚焦时message的样式
 	focusCls: null,
 	successCls: 'ui-validate-success',
