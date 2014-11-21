@@ -2,16 +2,16 @@
 	<div class="title" data-cal="title">
 		<div class="label label-year" data-calendar-time="year">
 			<select class="select select-year">
-				<% for (var i = 0; i < years.length; i++) {%>
+				<% for (var i = 0; i < years.length; i++) { %>
 				<option value="<%= years[i] %>" <% if(years[i] == currYear) { %> selected <% } %>><%= years[i] %>年</option>
-				<% }%>
+				<% } %>
 			</select>
 		</div>
 		<div class="label label-month" data-calendar-time="month">
 			<select class="select select-month">
-				<% for (var i = 1; i <= 12; i++) {%>
-					<option value="<%= i %>" <% if(i == currMonth) {%>selected<% }%>><%= i %>月</option>
-				<% }%>
+				<% for (var i = 1; i <= 12; i++) { %>
+					<option value="<%= i %>" <% if(i == currMonth) { %>selected<% } %>><%= i %>月</option>
+				<% } %>
 			</select>
 		</div>
 		<a href="javascript:;" data-calendar-btn="prev" class="prev">&lt;</a>
@@ -55,9 +55,9 @@
 	            </span>
 			</th>
 		</tr>
-		<% for (var i = 0; i < dates.length; i++) {%>
+		<% for (var i = 0; i < dates.length; i++) { %>
 		<tr>
-			<% for (var k = 0; k < dates[i].length; k++) {%>
+			<% for (var k = 0; k < dates[i].length; k++) { %>
 				<td class="<%= dates[i][k].cls %>"><span data-calendar-day="<%= dates[i][k].fullDate %>"><%= dates[i][k].date %></span></td>
 			<% } %>
 		</tr>
