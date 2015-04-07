@@ -390,7 +390,7 @@ aw.util.form = {
 	elValue: function(el){
 		el = $(el);
 		var type = el.attr("type"),
-			val = $.trim(el.val());
+			val = $.trim(el.val()).replace(/\s/g, '');
 
 		if (type === "radio" || type === "checkbox") {
 			return $("input[name='" + el.attr("name") + "']:checked").val();
@@ -427,12 +427,13 @@ aw.util.form = {
 		var fm = aw.util.form;
 		$.each(nodeChilds, function(){
 			var $this = $(this),
-				Md5 = $this.attr('data-m'),
-				encode = $this.attr('data-encode'),
+				Md5 = $this.data('m'),
+				encode = $this.data('encode'),
+				ignore = $this.data('validate-ignore'),
 				name = $this.attr('name'),
 				value = fm.elValue($this)
 
-			if(!name) return;
+			if(!name || ignore) return;
 
 			// 防止选取所有checkbox
 			if(!$this.is(':checked') && fm.checkable($this)) return;
@@ -2010,6 +2011,7 @@ var Validate = aw.Class.create({
 		}
 
 	},
+
 	/**
 	 * 日志
 	 * @param list
